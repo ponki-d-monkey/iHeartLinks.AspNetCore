@@ -5,7 +5,7 @@ using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Internal;
+using Microsoft.AspNetCore.Routing;
 
 namespace iHeartLinks.AspNetCore
 {
@@ -47,13 +47,13 @@ namespace iHeartLinks.AspNetCore
             }
 
             var actionDescriptor = TryGetActionDescriptor(key, $"The given key to retrieve the HTTP method does not exist. Value of '{nameof(key)}': {key}");
-            var actionConstraint = actionDescriptor.ActionConstraints.FirstOrDefault(x => x is HttpMethodActionConstraint) as HttpMethodActionConstraint;
-            if (actionConstraint == null || actionConstraint.HttpMethods == null || !actionConstraint.HttpMethods.Any())
+            var httpMethodMetadata = actionDescriptor.EndpointMetadata.FirstOrDefault(x => x is HttpMethodMetadata) as HttpMethodMetadata;
+            if (httpMethodMetadata == null || httpMethodMetadata.HttpMethods == null || !httpMethodMetadata.HttpMethods.Any())
             {
                 return null;
             }
 
-            return actionConstraint.HttpMethods.First();
+            return httpMethodMetadata.HttpMethods.First();
         }
 
         public string GetUrl(string key)
@@ -104,7 +104,7 @@ namespace iHeartLinks.AspNetCore
         private ActionDescriptor TryGetActionDescriptor(string key, string exceptionMessage)
         {
             var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == key);
-            if (actionDescriptor == null || actionDescriptor.ActionConstraints == null || !actionDescriptor.ActionConstraints.Any())
+            if (actionDescriptor == null)
             {
                 throw new KeyNotFoundException(exceptionMessage);
             }
