@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "iHeartLinks.AspNetCore", "src\iHeartLinks.AspNetCore\iHeartLinks.AspNetCore.csproj", "{F6320E0E-37C6-46A7-8F9E-7AF5BE66F5B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "iHeartLinks.AspNetCore.Tests", "tests\iHeartLinks.AspNetCore.Tests\iHeartLinks.AspNetCore.Tests.csproj", "{C3EAAD4F-8722-49D5-A7C2-2BA791F2D2BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F6320E0E-37C6-46A7-8F9E-7AF5BE66F5B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6320E0E-37C6-46A7-8F9E-7AF5BE66F5B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6320E0E-37C6-46A7-8F9E-7AF5BE66F5B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6320E0E-37C6-46A7-8F9E-7AF5BE66F5B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3EAAD4F-8722-49D5-A7C2-2BA791F2D2BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3EAAD4F-8722-49D5-A7C2-2BA791F2D2BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3EAAD4F-8722-49D5-A7C2-2BA791F2D2BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3EAAD4F-8722-49D5-A7C2-2BA791F2D2BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E12AC43F-490F-4EB0-8C6B-CB580DCD012E}
+	EndGlobalSection
+EndGlobal
