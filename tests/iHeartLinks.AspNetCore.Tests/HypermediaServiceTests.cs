@@ -4,10 +4,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Internal;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
 using Moq;
 using Xunit;
 
@@ -111,12 +110,12 @@ namespace iHeartLinks.AspNetCore.Tests
         [Fact]
         public void GetMethodShouldReturnNullWhenNoHttpMethodExist()
         {
-            var actionConstraints = new List<IActionConstraintMetadata>
+            var endpointMetadata = new List<object>
             {
-                new HttpMethodActionConstraint(new string[0])
+                new HttpMethodMetadata(new string[0])
             };
 
-            SetupProvider(actionConstraints);
+            SetupProvider(endpointMetadata);
 
             var result = sut.GetMethod(TestRouteName);
 
@@ -250,21 +249,21 @@ namespace iHeartLinks.AspNetCore.Tests
 
         private void SetupProvider()
         {
-            var actionConstraints = new List<IActionConstraintMetadata>
+            var endpointMetadata = new List<object>
             {
-                new HttpMethodActionConstraint(new string[] { TestMethod })
+                new HttpMethodMetadata(new string[] { TestMethod })
             };
 
-            SetupProvider(actionConstraints);
+            SetupProvider(endpointMetadata);
         }
 
-        private void SetupProvider(List<IActionConstraintMetadata> actionConstraints)
+        private void SetupProvider(List<object> endpointMetadata)
         {
             var actionDescriptors = new List<ActionDescriptor>
             {
                 new ActionDescriptor
                 {
-                    ActionConstraints = actionConstraints,
+                    EndpointMetadata = endpointMetadata,
                     AttributeRouteInfo = new AttributeRouteInfo 
                     { 
                         Name = TestRouteName,
