@@ -14,7 +14,7 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
                 throw new ArgumentException($"Parameter '{nameof(customUrl)}' must not be null or empty and must be a valid URL.");
             }
 
-            this.customUrl = customUrl.TrimEnd('/');
+            this.customUrl = customUrl;
         }
 
         public string GetBaseUrl()

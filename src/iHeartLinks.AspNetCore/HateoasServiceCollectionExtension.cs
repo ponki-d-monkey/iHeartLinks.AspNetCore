@@ -1,8 +1,8 @@
 ﻿using System;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace iHeartLinks.AspNetCore
 {
@@ -15,18 +15,56 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.AddScoped(x =>
-            {
-                var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
-                var factory = x.GetRequiredService<IUrlHelperFactory>();
-
-                return factory.GetUrlHelper(actionContext);
-            });
-
-            services.AddScoped<IHypermediaService, HypermediaService>();
+            services.AddHateoas((o, b) => o.UseAbsoluteUrlHref(b));
 
             return services;
+        }
+
+        public static IServiceCollection AddHateoas(this IServiceCollection services, Action<HypermediaServiceOptions> configureOptions)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (configureOptions == null)
+            {
+                throw new ArgumentNullException(nameof(configureOptions));
+            }
+
+            TryAddDependencies(services);
+
+            services.Configure(configureOptions);
+
+            return services;
+        }
+
+        public static IServiceCollection AddHateoas(this IServiceCollection services, Action<HypermediaServiceOptions, IUrlHelperBuilder> configureOptions)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            if (configureOptions == null)
+            {
+                throw new ArgumentNullException(nameof(configureOptions));
+            }
+
+            TryAddDependencies(services);
+
+            services
+                .AddOptions<HypermediaServiceOptions>()
+                .Configure(configureOptions);
+
+            return services;
+        }
+
+        private static void TryAddDependencies(IServiceCollection services)
+        {
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.TryAddScoped<IUrlHelperBuilder, UrlHelperBuilder>();
+            services.TryAddScoped<IHypermediaService, HypermediaService>();
         }
     }
 }

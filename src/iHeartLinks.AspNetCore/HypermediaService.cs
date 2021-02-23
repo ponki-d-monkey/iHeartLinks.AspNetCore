@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 
 namespace iHeartLinks.AspNetCore
 {
@@ -17,18 +17,24 @@ namespace iHeartLinks.AspNetCore
         private readonly IActionDescriptorCollectionProvider provider;
 
         public HypermediaService(
-            IBaseUrlProvider baseUrlProvider,
-            IUrlHelper urlHelper,
+            IOptions<HypermediaServiceOptions> options,
+            IUrlHelperBuilder urlHelperBuilder,
             IActionDescriptorCollectionProvider provider)
         {
-            if (baseUrlProvider == null)
+            if (options == null)
             {
-                throw new ArgumentNullException(nameof(baseUrlProvider));
+                throw new ArgumentNullException(nameof(options));
             }
 
-            baseUrl = baseUrlProvider.GetBaseUrl();
+            baseUrl = options.Value.BaseUrlProvider.GetBaseUrl();
 
-            this.urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
+            if (urlHelperBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(urlHelperBuilder));
+            }
+
+            urlHelper = urlHelperBuilder.Build();
+
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 

@@ -15,6 +15,7 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
 
         private readonly Mock<HttpRequest>  mockHttpRequest;
         private readonly Mock<IUrlHelper> mockUrlHelper;
+        private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
 
         private readonly CurrentRequestBaseUrlProvider sut;
 
@@ -24,15 +25,26 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
             mockUrlHelper = new Mock<IUrlHelper>();
             SetupUrlHelper();
 
-            sut = new CurrentRequestBaseUrlProvider(mockUrlHelper.Object);
+            mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
+            mockUrlHelperBuilder
+                .Setup(x => x.Build())
+                .Returns(mockUrlHelper.Object);
+
+            sut = new CurrentRequestBaseUrlProvider(mockUrlHelperBuilder.Object);
         }
 
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
         {
-            Action action = () => new CurrentRequestBaseUrlProvider(null);
+            Action action = () => new CurrentRequestBaseUrlProvider(default);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelper");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
+        }
+
+        [Fact]
+        public void CtorShouldInvokeUrlHelperBuilderBuildMethod()
+        {
+            mockUrlHelperBuilder.Verify(x => x.Build(), Times.Once);
         }
 
         [Fact]

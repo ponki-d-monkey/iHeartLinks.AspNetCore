@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -22,7 +23,9 @@ namespace iHeartLinks.AspNetCore.Tests
         private const string TestBaseUrl = "https://iheartlinks.example.com";
 
         private readonly Mock<IBaseUrlProvider> mockBaseUrlProvider;
+        private readonly Mock<IOptions<HypermediaServiceOptions>> mockOptions;
         private readonly Mock<IUrlHelper> mockUrlHelper;
+        private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
         private readonly Mock<IActionDescriptorCollectionProvider> mockProvider;
 
         private readonly HypermediaService sut;
@@ -34,24 +37,37 @@ namespace iHeartLinks.AspNetCore.Tests
                 .Setup(x => x.GetBaseUrl())
                 .Returns(TestBaseUrl);
 
+            mockOptions = new Mock<IOptions<HypermediaServiceOptions>>();
+            mockOptions
+                .Setup(x => x.Value)
+                .Returns(new HypermediaServiceOptions
+                {
+                    BaseUrlProvider = mockBaseUrlProvider.Object
+                });
+
             mockUrlHelper = new Mock<IUrlHelper>();
             SetupUrlHelper();
+
+            mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
+            mockUrlHelperBuilder
+                .Setup(x => x.Build())
+                .Returns(mockUrlHelper.Object);
 
             mockProvider = new Mock<IActionDescriptorCollectionProvider>();
             SetupProvider();
 
             sut = new HypermediaService(
-                mockBaseUrlProvider.Object,
-                mockUrlHelper.Object, 
+                mockOptions.Object,
+                mockUrlHelperBuilder.Object, 
                 mockProvider.Object);
         }
 
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenBaseUrlProviderIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenHypermediaServiceOptionsIsNull()
         {
-            Action action = () => new HypermediaService(null, mockUrlHelper.Object, mockProvider.Object);
+            Action action = () => new HypermediaService(default, mockUrlHelperBuilder.Object, mockProvider.Object);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("baseUrlProvider");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("options");
         }
 
         [Fact]
@@ -61,17 +77,23 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
         {
-            Action action = () => new HypermediaService(mockBaseUrlProvider.Object, null, mockProvider.Object);
+            Action action = () => new HypermediaService(mockOptions.Object, default, mockProvider.Object);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelper");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
+        }
+
+        [Fact]
+        public void CtorShouldInvokeUrlHelperBuilderBuildMethod()
+        {
+            mockUrlHelperBuilder.Verify(x => x.Build(), Times.Once);
         }
 
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenActionDescriptorCollectionProviderIsNull()
         {
-            Action action = () => new HypermediaService(mockBaseUrlProvider.Object, mockUrlHelper.Object, null);
+            Action action = () => new HypermediaService(mockOptions.Object, mockUrlHelperBuilder.Object, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("provider");
         }

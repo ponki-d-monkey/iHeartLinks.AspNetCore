@@ -7,9 +7,14 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
     {
         private readonly IUrlHelper urlHelper;
 
-        public CurrentRequestBaseUrlProvider(IUrlHelper urlHelper)
+        public CurrentRequestBaseUrlProvider(IUrlHelperBuilder urlHelperBuilder)
         {
-            this.urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
+            if (urlHelperBuilder == null)
+            {
+                throw new ArgumentNullException(nameof(urlHelperBuilder));
+            }
+
+            urlHelper = urlHelperBuilder.Build();
         }
 
         public string GetBaseUrl()

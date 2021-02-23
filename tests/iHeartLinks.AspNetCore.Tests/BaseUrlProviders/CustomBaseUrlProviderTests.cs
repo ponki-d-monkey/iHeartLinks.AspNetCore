@@ -11,6 +11,7 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
+        [InlineData("some random text")]
         public void CtorShouldThrowArgumentExceptionWhenCustomUrlIs(string customUrl)
         {
             Action action = () => new CustomBaseUrlProvider(customUrl);
@@ -21,16 +22,16 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         }
 
         [Theory]
-        [InlineData("https://iheartlinks.example.com", "https://iheartlinks.example.com")]
-        [InlineData("https://iheartlinks.example.com/", "https://iheartlinks.example.com")]
-        [InlineData("https://iheartlinks.example.com//", "https://iheartlinks.example.com")]
-        public void GetBaseUrlShouldReturnCustomUrlWithoutForwardSlashInTheEnd(string customUrl, string expectedResult)
+        [InlineData("https://iheartlinks.example.com")]
+        [InlineData("https://iheartlinks.example.com/")]
+        [InlineData("https://iheartlinks.example.com//")]
+        public void GetBaseUrlShouldReturnCustomUrl(string customUrl)
         {
             var sut = new CustomBaseUrlProvider(customUrl);
 
             var result = sut.GetBaseUrl();
 
-            result.Should().Be(expectedResult);
+            result.Should().Be(customUrl);
         }
     }
 }
