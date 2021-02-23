@@ -63,7 +63,7 @@ namespace iHeartLinks.AspNetCore
         private static void TryAddDependencies(IServiceCollection services)
         {
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.TryAddScoped<IUrlHelperBuilder, UrlHelperBuilder>();
+            services.TryAddTransient<IUrlHelperBuilder, UrlHelperBuilder>();
             services.TryAddScoped<IHypermediaService, HypermediaService>();
         }
     }
