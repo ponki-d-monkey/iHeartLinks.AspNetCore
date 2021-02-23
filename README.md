@@ -189,6 +189,36 @@ public class Person : DefaultHypermediaDocument
 
 Implementing `IHypermediaDocument` in models lets the package consumer define and configure how these classes will be serialized - whether as `JSON` or `XML` or to use _camel casing_ or not. This is helpful if the application is using an external package to serialize the API response like _Newtonsoft.Json_.
 
+## Custom href
+
+By default, the _href_ of a link is an absolute URL where the base URL is the scheme and server values of the current request. To give a custom base URL, configure the `HypermediaServiceOptions` in the `Startup` code.
+
+```csharp
+using iHeartLinks.AspNetCore;
+
+public class Startup
+{
+  public void ConfigureServices(IServicesCollection services)
+  {
+    services.AddHateoas(o => o.UseCustomUrlHref("https://your.custom.url"));
+  }
+}
+```
+
+For backward compatibility, a relative URL _href_ is also supported.
+
+```csharp
+using iHeartLinks.AspNetCore;
+
+public class Startup
+{
+  public void ConfigureServices(IServicesCollection services)
+  {
+    services.AddHateoas(o => o.UseRelativeUrlHref());
+  }
+}
+```
+
 ## Difference with other libraries
 
 A noticeable difference of **iHeartLinks.AspNetCore** to other HATEOAS libraries is it add links within controller actions. It does not require developers to configure models or policies centrally (e.g. in a startup code). This design decision was made to create a relationship between controller actions and links instead of models and links. One benefit of this is to easily track where links are being added. This way, if there is a missing link or an incorrect link was added to a model, it is quicker to identify in which controller action the issue occurred.
