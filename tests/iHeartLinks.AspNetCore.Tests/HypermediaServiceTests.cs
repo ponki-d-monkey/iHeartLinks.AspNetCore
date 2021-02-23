@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
+using iHeartLinks.AspNetCore.BaseUrlProviders;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -16,38 +18,82 @@ namespace iHeartLinks.AspNetCore.Tests
     {
         private const string TestMethod = "GET";
         private const string TestRouteName = "TestRouteName";
+        private const string TestRouteUrl = "/person/1";
         private const string TestRouteTemplate = "person/{id}";
-        private const string TestScheme = "https";
-        private const string TestHost = "iheartlinks.example.com";
+        private const string TestBaseUrl = "https://iheartlinks.example.com";
 
+        private readonly Mock<IBaseUrlProvider> mockBaseUrlProvider;
+        private readonly Mock<IOptions<HypermediaServiceOptions>> mockOptions;
         private readonly Mock<IUrlHelper> mockUrlHelper;
+        private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
         private readonly Mock<IActionDescriptorCollectionProvider> mockProvider;
 
         private readonly HypermediaService sut;
 
         public HypermediaServiceTests()
         {
+            mockBaseUrlProvider = new Mock<IBaseUrlProvider>();
+            mockBaseUrlProvider
+                .Setup(x => x.GetBaseUrl())
+                .Returns(TestBaseUrl);
+
+            mockOptions = new Mock<IOptions<HypermediaServiceOptions>>();
+            mockOptions
+                .Setup(x => x.Value)
+                .Returns(new HypermediaServiceOptions
+                {
+                    BaseUrlProvider = mockBaseUrlProvider.Object
+                });
+
             mockUrlHelper = new Mock<IUrlHelper>();
             SetupUrlHelper();
+
+            mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
+            mockUrlHelperBuilder
+                .Setup(x => x.Build())
+                .Returns(mockUrlHelper.Object);
 
             mockProvider = new Mock<IActionDescriptorCollectionProvider>();
             SetupProvider();
 
-            sut = new HypermediaService(mockUrlHelper.Object, mockProvider.Object);
+            sut = new HypermediaService(
+                mockOptions.Object,
+                mockUrlHelperBuilder.Object, 
+                mockProvider.Object);
         }
 
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenHypermediaServiceOptionsIsNull()
         {
-            Action action = () => new HypermediaService(null, mockProvider.Object);
+            Action action = () => new HypermediaService(default, mockUrlHelperBuilder.Object, mockProvider.Object);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelper");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("options");
+        }
+
+        [Fact]
+        public void CtorShouldInvokeBaseUrlProviderGetBaseUrlMethod()
+        {
+            mockBaseUrlProvider.Verify(x => x.GetBaseUrl(), Times.Once);
+        }
+
+        [Fact]
+        public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
+        {
+            Action action = () => new HypermediaService(mockOptions.Object, default, mockProvider.Object);
+
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
+        }
+
+        [Fact]
+        public void CtorShouldInvokeUrlHelperBuilderBuildMethod()
+        {
+            mockUrlHelperBuilder.Verify(x => x.Build(), Times.Once);
         }
 
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenActionDescriptorCollectionProviderIsNull()
         {
-            Action action = () => new HypermediaService(mockUrlHelper.Object, null);
+            Action action = () => new HypermediaService(mockOptions.Object, mockUrlHelperBuilder.Object, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("provider");
         }
@@ -61,11 +107,13 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void GetCurrentUrlShouldInvokeUrlHelperLinkMethod()
+        public void GetCurrentUrlShouldReturnCurrentUrl()
         {
-            sut.GetCurrentUrl();
+            var result = sut.GetCurrentUrl();
 
-            mockUrlHelper.Verify(x => x.Link(It.Is<string>(y => y == TestRouteName), It.IsAny<object>()), Times.Once);
+            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
+
+            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
         }
 
         [Fact]
@@ -73,7 +121,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             var result = sut.GetCurrentUrlTemplate();
 
-            result.Should().Be($"{TestScheme}://{TestHost}/{TestRouteTemplate}");
+            result.Should().Be($"{TestBaseUrl}/{TestRouteTemplate}");
         }
 
         [Theory]
@@ -138,11 +186,13 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void GetUrlShouldInvokeUrlHelperLinkMethod()
+        public void GetUrlShouldReturnUrl()
         {
-            sut.GetUrl(TestRouteName);
+            var result = sut.GetUrl(TestRouteName);
 
-            mockUrlHelper.Verify(x => x.Link(It.Is<string>(y => y == TestRouteName), It.Is<object>(y => y == null)), Times.Once);
+            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
+
+            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
         }
 
         [Theory]
@@ -171,11 +221,13 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void GetUrlWitArgsShouldInvokeUrlHelperLinkMethod()
+        public void GetUrlWitArgsShouldReturnUrl()
         {
-            sut.GetUrl(TestRouteName, new { id = 1 });
+            var result = sut.GetUrl(TestRouteName, new { id = 1 });
 
-            mockUrlHelper.Verify(x => x.Link(It.Is<string>(y => y == TestRouteName), It.Is<object>(y => y != null)), Times.Once);
+            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
+
+            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
         }
 
         [Theory]
@@ -206,7 +258,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             var result = sut.GetUrlTemplate(TestRouteName);
 
-            result.Should().Be($"{TestScheme}://{TestHost}/{TestRouteTemplate}");
+            result.Should().Be($"{TestBaseUrl}/{TestRouteTemplate}");
         }
 
         private void SetupUrlHelper()
@@ -215,14 +267,6 @@ namespace iHeartLinks.AspNetCore.Tests
             mockHttpRequest
                 .Setup(x => x.Method)
                 .Returns(TestMethod);
-
-            mockHttpRequest
-                .Setup(x => x.Scheme)
-                .Returns(TestScheme);
-
-            mockHttpRequest
-                .Setup(x => x.Host)
-                .Returns(new HostString(TestHost));
 
             var mockHttpContext = new Mock<HttpContext>();
             mockHttpContext
@@ -245,6 +289,10 @@ namespace iHeartLinks.AspNetCore.Tests
             mockUrlHelper
                 .Setup(x => x.ActionContext)
                 .Returns(actionContext);
+
+            mockUrlHelper
+                .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)))
+                .Returns(TestRouteUrl);
         }
 
         private void SetupProvider()
