@@ -81,7 +81,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
             mockSut.Verify(x =>
@@ -172,7 +172,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
             mockSut.Verify(x =>
@@ -263,7 +263,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
             mockSut.Verify(x =>
