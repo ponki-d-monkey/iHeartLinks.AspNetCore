@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -11,13 +12,22 @@ namespace iHeartLinks.AspNetCore
 {
     public class HypermediaService : IHypermediaService
     {
-        public readonly IUrlHelper urlHelper;
-        public readonly IActionDescriptorCollectionProvider provider;
+        private readonly string baseUrl;
+        private readonly IUrlHelper urlHelper;
+        private readonly IActionDescriptorCollectionProvider provider;
 
         public HypermediaService(
+            IBaseUrlProvider baseUrlProvider,
             IUrlHelper urlHelper,
             IActionDescriptorCollectionProvider provider)
         {
+            if (baseUrlProvider == null)
+            {
+                throw new ArgumentNullException(nameof(baseUrlProvider));
+            }
+
+            baseUrl = baseUrlProvider.GetBaseUrl();
+
             this.urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
@@ -29,14 +39,12 @@ namespace iHeartLinks.AspNetCore
 
         public string GetCurrentUrl()
         {
-            return urlHelper.Link(urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Name, null);
+            return GetUrl(urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Name);
         }
 
         public string GetCurrentUrlTemplate()
         {
-            var baseUrl = GetCurrentRequestBaseUrl();
-
-            return $"{baseUrl}{urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Template}";
+            return $"{baseUrl}/{urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Template}";
         }
 
         public string GetMethod(string key)
@@ -63,7 +71,9 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentException($"Parameter '{nameof(key)}' must not be null or empty.");
             }
 
-            return urlHelper.Link(key, null);
+            var routeUrl = urlHelper.RouteUrl(key);
+
+            return $"{baseUrl}{routeUrl}";
         }
 
         public string GetUrl(string key, object args)
@@ -78,7 +88,9 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(args));
             }
 
-            return urlHelper.Link(key, args);
+            var routeUrl = urlHelper.RouteUrl(key, args);
+
+            return $"{baseUrl}{routeUrl}";
         }
 
         public string GetUrlTemplate(string key)
@@ -89,16 +101,8 @@ namespace iHeartLinks.AspNetCore
             }
 
             var actionDescriptor = TryGetActionDescriptor(key, $"The given key to retrieve the URL template does not exist. Value of '{nameof(key)}': {key}");
-            var baseUrl = GetCurrentRequestBaseUrl();
 
-            return $"{baseUrl}{actionDescriptor.AttributeRouteInfo.Template}";
-        }
-
-        private string GetCurrentRequestBaseUrl()
-        {
-            var request = urlHelper.ActionContext.HttpContext.Request;
-
-            return $"{request.Scheme}://{request.Host.ToUriComponent()}/";
+            return $"{baseUrl}/{actionDescriptor.AttributeRouteInfo.Template}";
         }
 
         private ActionDescriptor TryGetActionDescriptor(string key, string exceptionMessage)
