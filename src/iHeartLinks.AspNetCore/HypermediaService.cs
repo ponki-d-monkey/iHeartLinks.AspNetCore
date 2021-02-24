@@ -13,7 +13,7 @@ namespace iHeartLinks.AspNetCore
     public class HypermediaService : IHypermediaService
     {
         private readonly string baseUrl;
-        private readonly IUrlHelper urlHelper;
+        private readonly Lazy<IUrlHelper> urlHelper;
         private readonly IActionDescriptorCollectionProvider provider;
 
         public HypermediaService(
@@ -33,24 +33,24 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(urlHelperBuilder));
             }
 
-            urlHelper = urlHelperBuilder.Build();
+            urlHelper = new Lazy<IUrlHelper>(() => urlHelperBuilder.Build());
 
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
         public string GetCurrentMethod()
         {
-            return urlHelper.ActionContext.HttpContext.Request.Method;
+            return urlHelper.Value.ActionContext.HttpContext.Request.Method;
         }
 
         public string GetCurrentUrl()
         {
-            return GetUrl(urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Name);
+            return GetUrl(urlHelper.Value.ActionContext.ActionDescriptor.AttributeRouteInfo.Name);
         }
 
         public string GetCurrentUrlTemplate()
         {
-            return $"{baseUrl}/{urlHelper.ActionContext.ActionDescriptor.AttributeRouteInfo.Template}";
+            return $"{baseUrl}/{urlHelper.Value.ActionContext.ActionDescriptor.AttributeRouteInfo.Template}";
         }
 
         public string GetMethod(string key)
@@ -77,7 +77,7 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentException($"Parameter '{nameof(key)}' must not be null or empty.");
             }
 
-            var routeUrl = urlHelper.RouteUrl(key);
+            var routeUrl = urlHelper.Value.RouteUrl(key);
 
             return $"{baseUrl}{routeUrl}";
         }
@@ -94,7 +94,7 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(args));
             }
 
-            var routeUrl = urlHelper.RouteUrl(key, args);
+            var routeUrl = urlHelper.Value.RouteUrl(key, args);
 
             return $"{baseUrl}{routeUrl}";
         }

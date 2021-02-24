@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using iHeartLinks.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -42,21 +43,26 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IActionContextAccessor) &&
-                    y.ImplementationType == typeof(ActionContextAccessor) &&
                     y.Lifetime == ServiceLifetime.Singleton)),
                 Times.Never);
 
             mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
         }
 
@@ -74,9 +80,14 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x => 
                 x.Add(It.Is<ServiceDescriptor>(y => 
                     y.ServiceType == typeof(IActionContextAccessor) && 
-                    y.ImplementationType == typeof(ActionContextAccessor) && 
                     y.Lifetime == ServiceLifetime.Singleton)), 
                 Times.Once);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Once);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
@@ -88,7 +99,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
         }
 
@@ -97,9 +108,10 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             var serviceDescriptors = new List<ServiceDescriptor>
             {
+                ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>(),
                 ServiceDescriptor.Singleton<IActionContextAccessor, ActionContextAccessor>(),
-                ServiceDescriptor.Scoped<IUrlHelperBuilder, UrlHelperBuilder>(),
-                ServiceDescriptor.Scoped<IHypermediaService, HypermediaService>()
+                ServiceDescriptor.Transient<IUrlHelperBuilder, UrlHelperBuilder>(),
+                ServiceDescriptor.Transient<IHypermediaService, HypermediaService>()
             };
 
             mockSut
@@ -117,21 +129,26 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IActionContextAccessor) &&
-                    y.ImplementationType == typeof(ActionContextAccessor) &&
                     y.Lifetime == ServiceLifetime.Singleton)),
                 Times.Never);
 
             mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
         }
 
@@ -141,18 +158,80 @@ namespace iHeartLinks.AspNetCore.Tests
             Func<IServiceCollection> func = () => default(IServiceCollection).AddHateoas(o => { });
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("services");
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IConfigureOptions<HypermediaServiceOptions>) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IActionContextAccessor) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IUrlHelperBuilder) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
 
         [Fact]
-        public void AddHateoasWithBuilderOptionsShouldThrowArgumentNullExceptionWhenConfigureOptionsDelegateIsNull()
+        public void AddHateoasWithOptionsShouldThrowArgumentNullExceptionWhenConfigureOptionsDelegateIsNull()
         {
             Func<IServiceCollection> func = () => sut.AddHateoas(default(Action<HypermediaServiceOptions>));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("configureOptions");
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IConfigureOptions<HypermediaServiceOptions>) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IActionContextAccessor) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IUrlHelperBuilder) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
 
         [Fact]
-        public void AddHateoasWithBuilderOptionsShouldAddRequiredDependencies()
+        public void AddHateoasWithOptionsShouldAddRequiredDependencies()
         {
             sut.AddHateoas(o => { });
 
@@ -165,9 +244,14 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IActionContextAccessor) &&
-                    y.ImplementationType == typeof(ActionContextAccessor) &&
                     y.Lifetime == ServiceLifetime.Singleton)),
                 Times.Once);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Once);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
@@ -179,7 +263,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
         }
 
@@ -188,9 +272,10 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             var serviceDescriptors = new List<ServiceDescriptor>
             {
+                ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>(),
                 ServiceDescriptor.Singleton<IActionContextAccessor, ActionContextAccessor>(),
-                ServiceDescriptor.Scoped<IUrlHelperBuilder, UrlHelperBuilder>(),
-                ServiceDescriptor.Scoped<IHypermediaService, HypermediaService>()
+                ServiceDescriptor.Transient<IUrlHelperBuilder, UrlHelperBuilder>(),
+                ServiceDescriptor.Transient<IHypermediaService, HypermediaService>()
             };
 
             mockSut
@@ -208,44 +293,111 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IActionContextAccessor) &&
-                    y.ImplementationType == typeof(ActionContextAccessor) &&
                     y.Lifetime == ServiceLifetime.Singleton)),
                 Times.Never);
 
             mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
         }
 
         [Fact]
-        public void AddHateoasWithBuilderOptionsShouldThrowArgumentNullExceptionWhenServiceCollectionIsNull()
+        public void AddHateoasWithHttpContextShouldThrowArgumentNullExceptionWhenServiceCollectionIsNull()
         {
-            Func<IServiceCollection> func = () => default(IServiceCollection).AddHateoas((o, b) => { });
+            Func<IServiceCollection> func = () => default(IServiceCollection).AddHateoas((o, h) => { });
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("services");
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IConfigureOptions<HypermediaServiceOptions>) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IActionContextAccessor) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IUrlHelperBuilder) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
 
         [Fact]
-        public void AddHateoasWithOptionsShouldThrowArgumentNullExceptionWhenConfigureOptionsDelegateIsNull()
+        public void AddHateoasWithHttpContextShouldThrowArgumentNullExceptionWhenConfigureOptionsDelegateIsNull()
         {
-            Func<IServiceCollection> func = () => sut.AddHateoas(default(Action<HypermediaServiceOptions, IUrlHelperBuilder>));
+            Func<IServiceCollection> func = () => sut.AddHateoas(default(Action<HypermediaServiceOptions, IHttpContextAccessor>));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("configureOptions");
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IConfigureOptions<HypermediaServiceOptions>) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IActionContextAccessor) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IUrlHelperBuilder) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
 
         [Fact]
-        public void AddHateoasWithOptionsShouldAddRequiredDependencies()
+        public void AddHateoasWithHttpContextShouldAddRequiredDependencies()
         {
-            sut.AddHateoas((o, b) => { });
+            sut.AddHateoas((o, h) => { });
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
@@ -256,9 +408,14 @@ namespace iHeartLinks.AspNetCore.Tests
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IActionContextAccessor) &&
-                    y.ImplementationType == typeof(ActionContextAccessor) &&
                     y.Lifetime == ServiceLifetime.Singleton)),
                 Times.Once);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Once);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
@@ -270,8 +427,57 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IHypermediaService) &&
                     y.ImplementationType == typeof(HypermediaService) &&
-                    y.Lifetime == ServiceLifetime.Scoped)),
+                    y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
+        }
+
+        [Fact]
+        public void AddHateoasWithHttpContextShouldOnlyAddOptionsWhenRequiredDependenciesAlreadyExist()
+        {
+            var serviceDescriptors = new List<ServiceDescriptor>
+            {
+                ServiceDescriptor.Singleton<IHttpContextAccessor, HttpContextAccessor>(),
+                ServiceDescriptor.Singleton<IActionContextAccessor, ActionContextAccessor>(),
+                ServiceDescriptor.Transient<IUrlHelperBuilder, UrlHelperBuilder>(),
+                ServiceDescriptor.Transient<IHypermediaService, HypermediaService>()
+            };
+
+            mockSut
+                .Setup(x => x.GetEnumerator())
+                .Returns(serviceDescriptors.AsEnumerable().GetEnumerator());
+
+            sut.AddHateoas((o, h) => { });
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IConfigureOptions<HypermediaServiceOptions>) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Once);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IActionContextAccessor) &&
+                    y.Lifetime == ServiceLifetime.Singleton)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IHttpContextAccessor) &&
+                   y.Lifetime == ServiceLifetime.Singleton)),
+               Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IUrlHelperBuilder) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
     }
 }

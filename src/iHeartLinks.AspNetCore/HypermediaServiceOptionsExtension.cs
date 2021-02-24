@@ -1,18 +1,19 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
+using Microsoft.AspNetCore.Http;
 
 namespace iHeartLinks.AspNetCore
 {
     public static class HypermediaServiceOptionsExtension
     {
-        public static HypermediaServiceOptions UseAbsoluteUrlHref(this HypermediaServiceOptions options, IUrlHelperBuilder urlHelperBuilder)
+        public static HypermediaServiceOptions UseAbsoluteUrlHref(this HypermediaServiceOptions options, IHttpContextAccessor httpContextAccessor)
         {
             if (options == null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
 
-            options.BaseUrlProvider = new CurrentRequestBaseUrlProvider(urlHelperBuilder);
+            options.BaseUrlProvider = new CurrentRequestBaseUrlProvider(httpContextAccessor);
 
             return options;
         }

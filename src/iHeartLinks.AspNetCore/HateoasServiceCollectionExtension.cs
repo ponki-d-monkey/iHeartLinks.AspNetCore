@@ -1,5 +1,6 @@
 ﻿using System;
 using iHeartLinks.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -15,7 +16,7 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services.AddHateoas((o, b) => o.UseAbsoluteUrlHref(b));
+            services.AddHateoas((o, h) => o.UseAbsoluteUrlHref(h));
 
             return services;
         }
@@ -39,7 +40,7 @@ namespace iHeartLinks.AspNetCore
             return services;
         }
 
-        public static IServiceCollection AddHateoas(this IServiceCollection services, Action<HypermediaServiceOptions, IUrlHelperBuilder> configureOptions)
+        public static IServiceCollection AddHateoas(this IServiceCollection services, Action<HypermediaServiceOptions, IHttpContextAccessor> configureOptions)
         {
             if (services == null)
             {
@@ -62,9 +63,10 @@ namespace iHeartLinks.AspNetCore
 
         private static void TryAddDependencies(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.TryAddTransient<IUrlHelperBuilder, UrlHelperBuilder>();
-            services.TryAddScoped<IHypermediaService, HypermediaService>();
+            services.TryAddTransient<IHypermediaService, HypermediaService>();
         }
     }
 }
