@@ -1,25 +1,25 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace iHeartLinks.AspNetCore.BaseUrlProviders
 {
     public sealed class CurrentRequestBaseUrlProvider : IBaseUrlProvider
     {
-        private readonly IUrlHelper urlHelper;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public CurrentRequestBaseUrlProvider(IUrlHelperBuilder urlHelperBuilder)
+        public CurrentRequestBaseUrlProvider(IHttpContextAccessor httpContextAccessor)
         {
-            if (urlHelperBuilder == null)
+            if (httpContextAccessor == null)
             {
-                throw new ArgumentNullException(nameof(urlHelperBuilder));
+                throw new ArgumentNullException(nameof(httpContextAccessor));
             }
 
-            urlHelper = urlHelperBuilder.Build();
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public string GetBaseUrl()
         {
-            var request = urlHelper.ActionContext.HttpContext.Request;
+            var request = httpContextAccessor.HttpContext.Request;
 
             return $"{request.Scheme}://{request.Host.ToUriComponent()}";
         }

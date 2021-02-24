@@ -85,12 +85,6 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void CtorShouldInvokeUrlHelperBuilderBuildMethod()
-        {
-            mockUrlHelperBuilder.Verify(x => x.Build(), Times.Once);
-        }
-
-        [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenActionDescriptorCollectionProviderIsNull()
         {
             Action action = () => new HypermediaService(mockOptions.Object, mockUrlHelperBuilder.Object, default);

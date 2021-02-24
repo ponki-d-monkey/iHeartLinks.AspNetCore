@@ -1,6 +1,7 @@
 ﻿using System;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Xunit;
 
@@ -20,23 +21,23 @@ namespace iHeartLinks.AspNetCore.Tests
         [Fact]
         public void UseAbsoluteUrlHrefShouldThrowArgumentNullExceptionWhenOptionsIsNull()
         {
-            Func<HypermediaServiceOptions> func = () => default(HypermediaServiceOptions).UseAbsoluteUrlHref(Mock.Of<IUrlHelperBuilder>());
+            Func<HypermediaServiceOptions> func = () => default(HypermediaServiceOptions).UseAbsoluteUrlHref(Mock.Of<IHttpContextAccessor>());
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("options");
         }
 
         [Fact]
-        public void UseAbsoluteUrlHrefShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
+        public void UseAbsoluteUrlHrefShouldThrowArgumentNullExceptionWhenHttpContextAccessorIsNull()
         {
             Func<HypermediaServiceOptions> func = () => sut.UseAbsoluteUrlHref(default);
 
-            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
+            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("httpContextAccessor");
         }
 
         [Fact]
         public void UseAbsoluteUrlHrefShouldSetBaseUrlProviderToCurrentRequestBaseUrlProvider()
         {
-            sut.UseAbsoluteUrlHref(Mock.Of<IUrlHelperBuilder>());
+            sut.UseAbsoluteUrlHref(Mock.Of<IHttpContextAccessor>());
 
             sut.BaseUrlProvider.Should().BeOfType<CurrentRequestBaseUrlProvider>();
         }
@@ -44,7 +45,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [Fact]
         public void UseAbsoluteUrlHrefShouldReturnSameInstanceOfOptions()
         {
-            var result = sut.UseAbsoluteUrlHref(Mock.Of<IUrlHelperBuilder>());
+            var result = sut.UseAbsoluteUrlHref(Mock.Of<IHttpContextAccessor>());
 
             result.Should().BeSameAs(sut);
         }
