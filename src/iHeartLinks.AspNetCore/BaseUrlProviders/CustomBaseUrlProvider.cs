@@ -17,7 +17,7 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
             this.customUrl = customUrl;
         }
 
-        public string GetBaseUrl()
+        public string Provide()
         {
             return customUrl;
         }

@@ -2,6 +2,6 @@
 {
     public interface IBaseUrlProvider
     {
-        string GetBaseUrl();
+        string Provide();
     }
 }

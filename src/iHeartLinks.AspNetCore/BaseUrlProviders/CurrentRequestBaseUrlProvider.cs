@@ -17,7 +17,7 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        public string GetBaseUrl()
+        public string Provide()
         {
             var request = httpContextAccessor.HttpContext.Request;
 

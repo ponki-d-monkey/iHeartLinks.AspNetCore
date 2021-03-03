@@ -25,11 +25,11 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("https://iheartlinks.example.com")]
         [InlineData("https://iheartlinks.example.com/")]
         [InlineData("https://iheartlinks.example.com//")]
-        public void GetBaseUrlShouldReturnCustomUrl(string customUrl)
+        public void ProvideShouldReturnCustomUrl(string customUrl)
         {
             var sut = new CustomBaseUrlProvider(customUrl);
 
-            var result = sut.GetBaseUrl();
+            var result = sut.Provide();
 
             result.Should().Be(customUrl);
         }
