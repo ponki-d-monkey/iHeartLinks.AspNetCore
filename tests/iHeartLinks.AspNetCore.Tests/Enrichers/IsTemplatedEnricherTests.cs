@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Xunit;
 
 namespace iHeartLinks.AspNetCore.Tests.Enrichers
@@ -13,7 +13,7 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         private const string TemplatedKey = "templated";
 
         private readonly IDictionary<string, string> keyParts;
-        private readonly LinkKey linkKey;
+        private readonly LinkRequest linkRequest;
 
         private readonly LinkFactoryContext context;
         private readonly LinkDataWriter writer;
@@ -24,10 +24,10 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         {
             keyParts = new Dictionary<string, string>
             {
-                { LinkKey.IdKey, "TestId" }
+                { LinkRequest.IdKey, "TestId" }
             };
 
-            linkKey = new LinkKey(keyParts);
+            linkRequest = new LinkRequest(keyParts);
 
             context = new LinkFactoryContext();
             writer = new LinkDataWriter(context);
@@ -36,58 +36,58 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         }
 
         [Fact]
-        public void EnrichShouldThrowArugmentNullExceptionWhenLinkKeyIsNull()
+        public void EnrichShouldThrowArugmentNullExceptionWhenLinkRequestIsNull()
         {
             Action action = () => sut.Enrich(default, writer);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkKey");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequest");
         }
 
         [Fact]
         public void EnrichShouldThrowArgumentNullExceptionWhenWriterIsNull()
         {
-            Action action = () => sut.Enrich(linkKey, default);
+            Action action = () => sut.Enrich(linkRequest, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("writer");
         }
 
         [Fact]
-        public void EnrichShouldWriteTemplatedValueWhenLinkKeyHasTemplatedValueTrue()
+        public void EnrichShouldWriteTemplatedValueWhenLinkRequestHasTemplatedValueTrue()
         {
             keyParts.Add(TemplatedKey, bool.TrueString.ToLower());
 
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(TemplatedKey);
             result.Should().Be(true);
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkKeyDoesNotHaveTemplatedValue()
+        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestDoesNotHaveTemplatedValue()
         {
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(TemplatedKey);
             result.Should().BeNull();
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkKeyHasTemplatedValueNotAValidBoolean()
+        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestHasTemplatedValueNotAValidBoolean()
         {
             keyParts.Add(TemplatedKey, "random string");
 
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(TemplatedKey);
             result.Should().BeNull();
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkKeyHasTemplatedValueFalse()
+        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestHasTemplatedValueFalse()
         {
             keyParts.Add(TemplatedKey, bool.FalseString.ToLower());
 
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(TemplatedKey);
             result.Should().BeNull();

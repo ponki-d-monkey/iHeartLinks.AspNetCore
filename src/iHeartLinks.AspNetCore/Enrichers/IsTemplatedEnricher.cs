@@ -1,5 +1,5 @@
 ﻿using System;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 
 namespace iHeartLinks.AspNetCore.Enrichers
 {
@@ -7,11 +7,11 @@ namespace iHeartLinks.AspNetCore.Enrichers
     {
         private const string TemplatedKey = "templated";
 
-        public void Enrich(LinkKey linkKey, LinkDataWriter writer)
+        public void Enrich(LinkRequest linkRequest, LinkDataWriter writer)
         {
-            if (linkKey == null)
+            if (linkRequest == null)
             {
-                throw new ArgumentNullException(nameof(linkKey));
+                throw new ArgumentNullException(nameof(linkRequest));
             }
 
             if (writer == null)
@@ -19,7 +19,7 @@ namespace iHeartLinks.AspNetCore.Enrichers
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            if (!linkKey.Parts.TryGetValue(TemplatedKey, out string templatedString))
+            if (!linkRequest.Parts.TryGetValue(TemplatedKey, out string templatedString))
             {
                 return;
             }

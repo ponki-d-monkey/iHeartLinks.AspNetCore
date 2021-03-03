@@ -1,16 +1,16 @@
 ﻿using System;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 
 namespace iHeartLinks.AspNetCore.UrlProviders
 {
     public class UrlProviderContext
     {
-        public UrlProviderContext(LinkKey linkKey)
+        public UrlProviderContext(LinkRequest linkRequest)
         {
-            LinkKey = linkKey ?? throw new ArgumentNullException(nameof(linkKey));
+            LinkRequest = linkRequest ?? throw new ArgumentNullException(nameof(linkRequest));
         }
 
-        public LinkKey LinkKey { get; private set; }
+        public LinkRequest LinkRequest { get; private set; }
 
         public object Args { get; set; }
     }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace iHeartLinks.AspNetCore.UrlProviders
@@ -28,31 +28,31 @@ namespace iHeartLinks.AspNetCore.UrlProviders
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var id = context.LinkKey.Id;
+            var id = context.LinkRequest.Id;
             if (string.IsNullOrWhiteSpace(id))
             {
-                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkKey)}' must contain a value for '{LinkKey.IdKey}'.");
+                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkRequest)}' must contain a value for '{LinkRequest.IdKey}'.");
             }
 
-            if (RequiresTemplatedUrl(context.LinkKey))
+            if (RequiresTemplatedUrl(context.LinkRequest))
             {
                 var url = GetTemplate(id);
                 if (string.IsNullOrWhiteSpace(url) ||
                     // A hack to make a templated url pass the Uri.IsWellFormedUriString() check. Will look for a more elegant solution later.
                     !Uri.IsWellFormedUriString(Regex.Replace(url, "[{}]", string.Empty), UriKind.RelativeOrAbsolute))
                 {
-                    throw new InvalidOperationException($"The given '{LinkKey.IdKey}' to retrieve the URL template did not provide a valid value. Value of '{LinkKey.IdKey}': {id}");
+                    throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL template did not provide a valid value. Value of '{LinkRequest.IdKey}': {id}");
                 }
 
-                return new Uri(url, UriKind.RelativeOrAbsolute);
+                return new Uri($"/{url}", UriKind.RelativeOrAbsolute);
             }
 
             return nonTemplatedUrlProvider.Provide(context);
         }
 
-        private bool RequiresTemplatedUrl(LinkKey linkKey)
+        private bool RequiresTemplatedUrl(LinkRequest linkRequest)
         {
-            return linkKey.Parts.ContainsKey("templated") && linkKey.Parts["templated"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
+            return linkRequest.Parts.ContainsKey("templated") && linkRequest.Parts["templated"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
         }
 
         private string GetTemplate(string id)

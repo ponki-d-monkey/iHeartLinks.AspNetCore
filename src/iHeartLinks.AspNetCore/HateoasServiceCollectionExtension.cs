@@ -1,8 +1,9 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,10 +22,11 @@ namespace iHeartLinks.AspNetCore
             services.AddHttpContextAccessor();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.TryAddTransient<IUrlHelperBuilder, UrlHelperBuilder>();
-            services.TryAddTransient<ILinkKeyProcessor, PipeDelimitedLinkKeyProcessor>();
+            services.TryAddTransient<ILinkRequestProcessor, PipeDelimitedLinkRequestProcessor>();
             services.TryAddTransient<IBaseUrlProvider, CurrentRequestBaseUrlProvider>();
             services.TryAddTransient<IUrlProvider, NonTemplatedUrlProvider>();
             services.TryAddTransient<ILinkFactory, LinkFactory>();
+            services.TryAddTransient<IHypermediaService, HypermediaService>();
 
             return services;
         }

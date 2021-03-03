@@ -1,5 +1,5 @@
 ﻿using System;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iHeartLinks.AspNetCore.UrlProviders
@@ -25,10 +25,10 @@ namespace iHeartLinks.AspNetCore.UrlProviders
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var id = context.LinkKey.Id;
+            var id = context.LinkRequest.Id;
             if (string.IsNullOrWhiteSpace(id))
             {
-                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkKey)}' must contain a value for '{LinkKey.IdKey}'.");
+                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkRequest)}' must contain a value for '{LinkRequest.IdKey}'.");
             }
 
             var url = context.Args == null ? 
@@ -38,7 +38,7 @@ namespace iHeartLinks.AspNetCore.UrlProviders
             if (string.IsNullOrWhiteSpace(url) ||
                 !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
             {
-                throw new InvalidOperationException($"The given '{LinkKey.IdKey}' to retrieve the URL did not provide a valid value. Value of '{LinkKey.IdKey}': {id}");
+                throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL did not provide a valid value. Value of '{LinkRequest.IdKey}': {id}");
             }
 
             return new Uri(url, UriKind.RelativeOrAbsolute);

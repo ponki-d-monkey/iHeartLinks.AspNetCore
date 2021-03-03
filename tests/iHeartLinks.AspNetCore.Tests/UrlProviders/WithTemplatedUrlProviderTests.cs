@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -15,7 +15,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
     public sealed class WithTemplatedUrlProviderTests
     {
         private const string TestRouteName = "TestRouteName";
-        private const string TestRouteTemplate = "/person/{id}";
+        private const string TestRouteTemplate = "person/{id}";
         private const string TestRouteUrl = "/person/1";
 
         private readonly Mock<IUrlHelper> mockUrlHelper;
@@ -66,33 +66,33 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         }
 
         [Fact]
-        public void ProvideShouldThrowArgumentExceptionWhenLinkKeyDoesNotContainAnId()
+        public void ProvideShouldThrowArgumentExceptionWhenLinkRequestDoesNotContainAnId()
         {
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "templated", "true" }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
-            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("Parameter 'context.LinkKey' must contain a value for 'id'.");
+            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("Parameter 'context.LinkRequest' must contain a value for 'id'.");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
         }
 
         [Fact]
-        public void ProvideShouldThrowKeyNotFoundExceptionWhenKeyForActionDescriptorDoesNotExistAndLinkKeyHasTemplatedValueTrue()
+        public void ProvideShouldThrowKeyNotFoundExceptionWhenKeyForActionDescriptorDoesNotExistAndLinkRequestHasTemplatedValueTrue()
         {
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", "NonExistingRouteName" },
                 { "templated", bool.TrueString.ToLower() }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -107,7 +107,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("invalid url format")]
-        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkKeyHasTemplatedValueTrueAndUrlTemplateIs(string template)
+        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkRequestHasTemplatedValueTrueAndUrlTemplateIs(string template)
         {
             var attributeRouteInfo = new AttributeRouteInfo
             {
@@ -117,13 +117,13 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
 
             SetupProvider(attributeRouteInfo);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", bool.TrueString.ToLower() }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -134,19 +134,19 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         }
 
         [Fact]
-        public void ProvideShouldReturnUrlTemplateWhenLinkKeyHasTemplatedValueTrue()
+        public void ProvideShouldReturnUrlTemplateWhenLinkRequestHasTemplatedValueTrue()
         {
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", bool.TrueString.ToLower() }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
             var result = sut.Provide(context);
 
             result.Should().NotBeNull();
-            result.ToString().Should().Be(TestRouteTemplate);
+            result.ToString().Should().Be($"/{TestRouteTemplate}");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
@@ -157,18 +157,18 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("invalid url format")]
-        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkKeyDoesNotHaveTemplatedValueAndUrlHelperReturns(string url)
+        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkRequestDoesNotHaveTemplatedValueAndUrlHelperReturns(string url)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(url);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -187,19 +187,19 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [InlineData("", "untrue")]
         [InlineData(" ", "untrue")]
         [InlineData("invalid url format", "untrue")]
-        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkKeyHasTemplatedValueNotTrueAndUrlHelperReturns(string url, string templatedValue)
+        public void ProvideShouldThrowInvalidOperationExceptionWhenLinkRequestHasTemplatedValueNotTrueAndUrlHelperReturns(string url, string templatedValue)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(url);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", templatedValue }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -210,18 +210,18 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         }
 
         [Fact]
-        public void ProvideShouldReturnUrlWhenLinkKeyDoesNotHaveTemplatedValue()
+        public void ProvideShouldReturnUrlWhenLinkRequestDoesNotHaveTemplatedValue()
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(TestRouteUrl);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
             var result = sut.Provide(context);
 
             result.Should().NotBeNull();
@@ -234,19 +234,19 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [Theory]
         [InlineData("false")]
         [InlineData("untrue")]
-        public void ProvideShouldReturnUrlWhenLinkKeyHasTemplatedValueNotTrue(string templatedValue)
+        public void ProvideShouldReturnUrlWhenLinkRequestHasTemplatedValueNotTrue(string templatedValue)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(TestRouteUrl);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", templatedValue }
             });
 
-            var context = new UrlProviderContext(linkKey);
+            var context = new UrlProviderContext(linkRequest);
             var result = sut.Provide(context);
 
             result.Should().NotBeNull();
@@ -261,18 +261,18 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("invalid url format")]
-        public void ProvideWithArgsShouldThrowInvalidOperationExceptionWhenLinkKeyDoesNotHaveTemplatedValueAndUrlHelperReturns(string url)
+        public void ProvideWithArgsShouldThrowInvalidOperationExceptionWhenLinkRequestDoesNotHaveTemplatedValueAndUrlHelperReturns(string url)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(url);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkKey)
+            var context = new UrlProviderContext(linkRequest)
             {
                 Args = new object()
             };
@@ -294,19 +294,19 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [InlineData("", "untrue")]
         [InlineData(" ", "untrue")]
         [InlineData("invalid url format", "untrue")]
-        public void ProvideWithArgsShouldThrowInvalidOperationExceptionWhenLinkKeyHasTemplatedValueNotTrueAndUrlHelperReturns(string url, string templatedValue)
+        public void ProvideWithArgsShouldThrowInvalidOperationExceptionWhenLinkRequestHasTemplatedValueNotTrueAndUrlHelperReturns(string url, string templatedValue)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(url);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", templatedValue }
             });
 
-            var context = new UrlProviderContext(linkKey)
+            var context = new UrlProviderContext(linkRequest)
             {
                 Args = new object()
             };
@@ -320,18 +320,18 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         }
 
         [Fact]
-        public void ProvideWithArgsShouldReturnUrlWhenLinkKeyDoesNotHaveTemplatedValue()
+        public void ProvideWithArgsShouldReturnUrlWhenLinkRequestDoesNotHaveTemplatedValue()
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(TestRouteUrl);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkKey)
+            var context = new UrlProviderContext(linkRequest)
             {
                 Args = new object()
             };
@@ -347,19 +347,19 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         [Theory]
         [InlineData("false")]
         [InlineData("untrue")]
-        public void ProvideWithArgsShouldReturnUrlWhenLinkKeyHasTemplatedValueNotTrue(string templatedValue)
+        public void ProvideWithArgsShouldReturnUrlWhenLinkRequestHasTemplatedValueNotTrue(string templatedValue)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(TestRouteUrl);
 
-            var linkKey = new LinkKey(new Dictionary<string, string>
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestRouteName },
                 { "templated", templatedValue }
             });
 
-            var context = new UrlProviderContext(linkKey)
+            var context = new UrlProviderContext(linkRequest)
             {
                 Args = new object()
             };

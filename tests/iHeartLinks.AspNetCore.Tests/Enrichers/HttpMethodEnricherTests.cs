@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -20,7 +20,7 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         private const string TestHttpMethod = "GET";
 
         private readonly IDictionary<string, string> keyParts;
-        private readonly LinkKey linkKey;
+        private readonly LinkRequest linkRequest;
 
         private readonly LinkFactoryContext context;
         private readonly LinkDataWriter writer;
@@ -35,10 +35,10 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         {
             keyParts = new Dictionary<string, string>
             {
-                { LinkKey.IdKey, TestId }
+                { LinkRequest.IdKey, TestId }
             };
 
-            linkKey = new LinkKey(keyParts);
+            linkRequest = new LinkRequest(keyParts);
 
             context = new LinkFactoryContext();
             writer = new LinkDataWriter(context);
@@ -61,17 +61,17 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         }
 
         [Fact]
-        public void EnrichShouldThrowArugmentNullExceptionWhenLinkKeyIsNull()
+        public void EnrichShouldThrowArugmentNullExceptionWhenLinkRequestIsNull()
         {
             Action action = () => sut.Enrich(default, writer);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkKey");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequest");
         }
 
         [Fact]
         public void EnrichShouldThrowArgumentNullExceptionWhenWriterIsNull()
         {
-            Action action = () => sut.Enrich(linkKey, default);
+            Action action = () => sut.Enrich(linkRequest, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("writer");
         }
@@ -79,14 +79,14 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
         [Fact]
         public void EnrichShouldWriteHttpMethodValue()
         {
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(HttpMethodKey);
             result.Should().Be(TestHttpMethod);
         }
 
         [Fact]
-        public void EnrichShouldNotWriteHttpMethodWhenLinkKeyIdDoesNotExist()
+        public void EnrichShouldNotWriteHttpMethodWhenLinkRequestIdDoesNotExist()
         {
             SetupProvider(new ActionDescriptor
             {
@@ -94,7 +94,7 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
                 AttributeRouteInfo = attributeRouteInfo
             });
 
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(HttpMethodKey);
             result.Should().BeNull();
@@ -112,7 +112,7 @@ namespace iHeartLinks.AspNetCore.Tests.Enrichers
                 }
             });
 
-            sut.Enrich(linkKey, writer);
+            sut.Enrich(linkRequest, writer);
 
             var result = context.Get(HttpMethodKey);
             result.Should().BeNull();

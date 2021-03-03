@@ -4,8 +4,9 @@ using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,8 +52,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkKeyProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) &&
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -82,6 +83,13 @@ namespace iHeartLinks.AspNetCore.Tests
                     y.ImplementationType == typeof(LinkFactory) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
         }
 
         [Fact]
@@ -104,8 +112,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x => 
                 x.Add(It.Is<ServiceDescriptor>(y => 
-                    y.ServiceType == typeof(ILinkKeyProcessor) && 
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) && 
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)), 
                 Times.Once);
 
@@ -133,6 +141,13 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(ILinkFactory) &&
                     y.ImplementationType == typeof(LinkFactory) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Once);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
         }
@@ -167,8 +182,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkKeyProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) &&
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -196,6 +211,13 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(ILinkFactory) &&
                     y.ImplementationType == typeof(LinkFactory) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
         }
@@ -222,8 +244,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkKeyProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) &&
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -251,6 +273,13 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(ILinkFactory) &&
                     y.ImplementationType == typeof(LinkFactory) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Never);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
         }
@@ -275,8 +304,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkKeyProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) &&
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
@@ -304,6 +333,13 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(ILinkFactory) &&
                     y.ImplementationType == typeof(LinkFactory) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Once);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
         }
@@ -332,8 +368,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkKeyProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkKeyProcessor) &&
+                    y.ServiceType == typeof(ILinkRequestProcessor) &&
+                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
@@ -396,6 +432,13 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(ILinkFactory) &&
                     y.ImplementationType == typeof(HttpLinkFactory) &&
+                    y.Lifetime == ServiceLifetime.Transient)),
+                Times.Once);
+
+            mockSut.Verify(x =>
+                x.Add(It.Is<ServiceDescriptor>(y =>
+                    y.ServiceType == typeof(IHypermediaService) &&
+                    y.ImplementationType == typeof(HypermediaService) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
         }

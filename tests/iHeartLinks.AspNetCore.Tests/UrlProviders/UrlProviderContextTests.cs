@@ -8,11 +8,11 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
     public sealed class UrlProviderContextTests
     {
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenLinkKeyIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenLinkRequestIsNull()
         {
             Action action = () => new UrlProviderContext(default);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkKey");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequest");
         }
     }
 }

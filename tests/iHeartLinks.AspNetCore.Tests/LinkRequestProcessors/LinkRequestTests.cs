@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
+namespace iHeartLinks.AspNetCore.Tests.LinkRequestProcessors
 {
-    public sealed class LinkKeyTests
+    public sealed class LinkRequestTests
     {
         private const string TestIdValue = "TestIdValue";
 
@@ -20,7 +20,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [MemberData(nameof(NullOrEmptyParts))]
         public void CtorShouldThrowArgumentExceptionWhenPartsIs(IDictionary<string, string> parts)
         {
-            Action action = () => new LinkKey(parts);
+            Action action = () => new LinkRequest(parts);
 
             var exception = action.Should().Throw<ArgumentException>().Which;
             exception.Message.Should().Be("Parameter 'parts' must not be null or empty.");
@@ -30,7 +30,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [Fact]
         public void IdShouldReturnIdValueFromPartsWhenCasingIsCorrect()
         {
-            var sut = new LinkKey(new Dictionary<string, string>
+            var sut = new LinkRequest(new Dictionary<string, string>
             {
                 { "id", TestIdValue }
             });
@@ -41,7 +41,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [Fact]
         public void IdShouldNotReturnIdValueFromPartsWhenCasingIsIncorrect()
         {
-            var sut = new LinkKey(new Dictionary<string, string>
+            var sut = new LinkRequest(new Dictionary<string, string>
             {
                 { "ID", TestIdValue }
             });
@@ -52,7 +52,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [Fact]
         public void IdShouldNotReturnIdValueFromPartsWhenItDoesNotExist()
         {
-            var sut = new LinkKey(new Dictionary<string, string>
+            var sut = new LinkRequest(new Dictionary<string, string>
             {
                 { "key", TestIdValue }
             });

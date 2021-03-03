@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace iHeartLinks.AspNetCore.LinkKeyProcessors
+namespace iHeartLinks.AspNetCore.LinkRequestProcessors
 {
-    public class LinkKey
+    public class LinkRequest
     {
         public const string IdKey = "id";
 
-        public LinkKey(IDictionary<string, string> parts)
+        public LinkRequest(IDictionary<string, string> parts)
         {
             if (parts == null || !parts.Any())
             {

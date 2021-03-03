@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
+namespace iHeartLinks.AspNetCore.Tests.LinkRequestProcessors
 {
-    public sealed class PipeDelimitedLinkKeyProcessorTests
+    public sealed class PipeDelimitedLinkRequestProcessorTests
     {
-        private readonly PipeDelimitedLinkKeyProcessor sut;
+        private readonly PipeDelimitedLinkRequestProcessor sut;
 
-        public PipeDelimitedLinkKeyProcessorTests()
+        public PipeDelimitedLinkRequestProcessorTests()
         {
-            sut = new PipeDelimitedLinkKeyProcessor();
+            sut = new PipeDelimitedLinkRequestProcessor();
         }
 
-        public static IEnumerable<object[]> LinkKeysWithId = new List<object[]>
+        public static IEnumerable<object[]> LinkRequestsWithId = new List<object[]>
         {
             new[] { "Hello", "Hello" },
             new[] { "Hello ", "Hello" },
@@ -44,20 +44,20 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void ProcessShouldThrowArgumentExceptionWhenKeyIsNullOrEmpty(string key)
+        public void ProcessShouldThrowArgumentExceptionWhenRequestIsNullOrEmpty(string request)
         {
-            Func<LinkKey> func = () => sut.Process(key);
+            Func<LinkRequest> func = () => sut.Process(request);
 
             var exception = func.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'key' must not be null or empty.");
+            exception.Message.Should().Be("Parameter 'request' must not be null or empty.");
             exception.ParamName.Should().BeNull();
         }
 
         [Theory]
-        [MemberData(nameof(LinkKeysWithId))]
-        public void ProcessShouldReturnLinkKeyWithIdWhenKeyIs(string key, string expectedIdValue)
+        [MemberData(nameof(LinkRequestsWithId))]
+        public void ProcessShouldReturnLinkRequestWithIdWhenKeyIs(string request, string expectedIdValue)
         {
-            var result = sut.Process(key);
+            var result = sut.Process(request);
 
             result.Should().NotBeNull();
             result.Id.Should().Be(expectedIdValue);
@@ -68,9 +68,9 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [InlineData("Id1|Id2")]
         [InlineData("Id1|id=Id1")]
         [InlineData("Id1|id=Id2")]
-        public void ProcessShouldThrowArgumentExceptionWhenKeyHasMoreThan1IdValue(string key)
+        public void ProcessShouldThrowArgumentExceptionWhenRequestHasMoreThan1IdValue(string request)
         {
-            Func<LinkKey> func = () => sut.Process(key);
+            Func<LinkRequest> func = () => sut.Process(request);
 
             func.Should().Throw<ArgumentException>().Which.Message.Should().Be("Multiple values found for 'id'. A keyless value is treated as 'id'. If it is present, there is no need to supply a value with 'id' key explicitly.");
         }
@@ -80,21 +80,21 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [InlineData("key=value=pair=invalid")]
         [InlineData("Hello|key=value=pair")]
         [InlineData("id=Hello|key=value=pair")]
-        public void ProcessShouldThrowArgumentExceptionWhenAValueOfASplitKeyHasMoreThan2Parts(string key)
+        public void ProcessShouldThrowArgumentExceptionWhenAValueOfASplitRequestHasMoreThan2Parts(string request)
         {
-            Func<LinkKey> func = () => sut.Process(key);
+            Func<LinkRequest> func = () => sut.Process(request);
 
-            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("A key-value pair delimited by an equal sign produced by splitting the key must contain 2 parts at the most.");
+            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("A key-value pair delimited by an equal sign produced by splitting the request must contain 2 parts at the most.");
         }
 
         [Theory]
         [InlineData("key=Hello|key=World")]
         [InlineData("key=Hello|Id1|key=World")]
-        public void ProcessShouldThrowArgumentExceptionWhenDuplicateKeysExist(string key)
+        public void ProcessShouldThrowArgumentExceptionWhenDuplicateKeysExistInASplitRequest(string request)
         {
-            Func<LinkKey> func = () => sut.Process(key);
+            Func<LinkRequest> func = () => sut.Process(request);
 
-            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("A key-value pair delimited by an equal sign produced by splitting the key must have a unique key.");
+            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("A key-value pair delimited by an equal sign produced by splitting the request must have a unique key.");
         }
 
         [Theory]
@@ -105,9 +105,9 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [InlineData("id=Hello|key=World", 2)]
         [InlineData("name=Hello|key=World", 2)]
         [InlineData("name=Hello|key=World||", 2)]
-        public void ProcessShouldReturnLinkKeyWithCorrectCount(string key, int expectedCount)
+        public void ProcessShouldReturnLinkRequestWithCorrectCount(string request, int expectedCount)
         {
-            var result = sut.Process(key);
+            var result = sut.Process(request);
 
             result.Should().NotBeNull();
             result.Parts.Should().HaveCount(expectedCount);
@@ -118,9 +118,9 @@ namespace iHeartLinks.AspNetCore.Tests.LinkKeyProcessors
         [InlineData(" Hello | key = value ")]
         [InlineData("id=Hello|key=value")]
         [InlineData("id = Hello | key = value ")]
-        public void ProcessShouldReturnLinkKeyWithCorrectKeyValuePairs(string key)
+        public void ProcessShouldReturnLinkRequestWithCorrectKeyValuePairs(string request)
         {
-            var result = sut.Process(key);
+            var result = sut.Process(request);
 
             result.Should().NotBeNull();
             result.Id.Should().Be("Hello");

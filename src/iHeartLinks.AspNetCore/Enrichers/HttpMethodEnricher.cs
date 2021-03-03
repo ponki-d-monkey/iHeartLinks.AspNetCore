@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using iHeartLinks.AspNetCore.LinkKeyProcessors;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 
@@ -17,11 +17,11 @@ namespace iHeartLinks.AspNetCore.Enrichers
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
-        public void Enrich(LinkKey linkKey, LinkDataWriter writer)
+        public void Enrich(LinkRequest linkRequest, LinkDataWriter writer)
         {
-            if (linkKey == null)
+            if (linkRequest == null)
             {
-                throw new ArgumentNullException(nameof(linkKey));
+                throw new ArgumentNullException(nameof(linkRequest));
             }
 
             if (writer == null)
@@ -29,7 +29,7 @@ namespace iHeartLinks.AspNetCore.Enrichers
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            var httpMethod = GetHttpMethod(linkKey.Id);
+            var httpMethod = GetHttpMethod(linkRequest.Id);
             if (!string.IsNullOrWhiteSpace(httpMethod))
             {
                 writer.Write(HttpMethodKey, httpMethod);
