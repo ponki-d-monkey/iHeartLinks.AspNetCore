@@ -302,7 +302,7 @@ hypermediaService
 
 If there is a need to return custom link properties from `IHypermediaService`, this can be achieved by doing the following.
 
-Create a custom link class that inherits from [Link](src/iHeartLinks.Core/Link.cs). This is demonstrated in the code below. In addition, see [HttpLink](src/iHeartLinks.AspNetCore/Extensions/HttpLink.cs) as a guide.
+Create a custom link class that inherits from [Link](https://github.com/ponki-d-monkey/iHeartLinks.Core/blob/master/src/iHeartLinks.Core/Link.cs). This is demonstrated in the code below. In addition, see [HttpLink](src/iHeartLinks.AspNetCore/Extensions/HttpLink.cs) as a guide.
 
 ```csharp
 using iHeartLinks.Core;
