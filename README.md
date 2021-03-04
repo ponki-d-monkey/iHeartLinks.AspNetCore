@@ -93,12 +93,10 @@ The code above will produce an API response in JSON format like the example belo
   "name": "Juan Dela Cruz",
   "_links": {
     "self": {
-      "href": "https://your.api.com/person/1",
-      "method": "GET"
+      "href": "https://your.api.com/person/1"
     },
     "update": {
-      "href": "https://your.api.com/person/1",
-      "method": "POST"
+      "href": "https://your.api.com/person/1"
     }
   }
 }
@@ -133,35 +131,18 @@ hypermediaService
 
 This feature is part of [iHeartLinks.Core](https://github.com/ponki-d-monkey/iHeartLinks.Core).
 
-### Templated
+### External
 
-Templated links can be added to a model by calling the method below.
+To add an external link, use the `AddLink()` method.
 
 ```csharp
 hypermediaService
-  .AddSelf(collectionModel)
-  .AddRouteTemplate("get", "GetPerson")
-  .Document
+  .AddSelf(model)
+  .AddLink("profile", "https://social-media.example.com/api/profile/5B94C11F-FB12-415D-9F75-8E1832F0D6F8"))
+  .Document;
 ```
 
-The code above will produce an API response in JSON format like the example below.
-
-```json
-{
-  "items": [],
-  "_links": {
-    "self": {
-      "href": "https://your.api.com/person",
-      "method": "GET"
-    },
-    "get": {
-      "href": "https://your.api.com/person/{id}",
-      "method": "GET",
-      "templated": true
-    }
-  }
-}
-```
+This feature is part of [iHeartLinks.Core](https://github.com/ponki-d-monkey/iHeartLinks.Core).
 
 ## Models
 
@@ -189,9 +170,30 @@ public class Person : DefaultHypermediaDocument
 
 Implementing `IHypermediaDocument` in models lets the package consumer define and configure how these classes will be serialized - whether as `JSON` or `XML` or to use _camel casing_ or not. This is helpful if the application is using an external package to serialize the API response like _Newtonsoft.Json_.
 
-## Custom href
+## Configuration
 
-By default, the _href_ of a link is an absolute URL where the base URL is the scheme and server values of the current request. To give a custom base URL, configure the `HypermediaServiceOptions` in the `Startup` code.
+### Extended link
+
+By default, only _rel_ and _href_ will be returned by `IHypermediaService`. If an _HTTP method_ is needed, the `IHypermediaService` can be configured to return a link object that contains a `Method` property.
+
+```csharp
+using iHeartLinks.AspNetCore;
+using iHeartLinks.AspNetCore.Extensions;
+
+public class Startup
+{
+  public void ConfigureServices(IServicesCollection services)
+  {
+    services.AddHateoas(b => b.UseExtendedLink());
+  }
+}
+```
+
+Calling the `UseExtendedLink()` method also enables retrieval of _templated links_.
+
+### Custom href
+
+By default, the _href_ of a link is an absolute URL where the base URL is the scheme and server values of the current request. To give a custom base URL, configure `IHypermediaService` in the `Startup` code.
 
 ```csharp
 using iHeartLinks.AspNetCore;
@@ -200,7 +202,7 @@ public class Startup
 {
   public void ConfigureServices(IServicesCollection services)
   {
-    services.AddHateoas(o => o.UseCustomUrlHref("https://your.custom.url"));
+    services.AddHateoas(b => b.UseCustomBaseUrlHref("https://your.custom.url"));
   }
 }
 ```
@@ -214,10 +216,128 @@ public class Startup
 {
   public void ConfigureServices(IServicesCollection services)
   {
-    services.AddHateoas(o => o.UseRelativeUrlHref());
+    services.AddHateoas(b => b.UseRelativeUrlHref());
   }
 }
 ```
+
+## Extensions
+
+Features that can be turned on/off have been moved to the `iHeartLinks.AspNetCore.Extensions` namespace. See the _Configuration_ section above to understand how to enable these features.
+
+### Templated
+
+Templated links can be added to a model by calling the method `AddRouteTemplate()` method.
+
+```csharp
+using iHeartLinks.AspNetCore;
+using iHeartLinks.AspNetCore.Extensions;
+using iHeartLinks.Core;
+
+[Route("api/[controller]")]
+[ApiController]
+public class PersonController
+{
+  private readonly IHypermediaService hypermediaService;
+
+  public PersonController(IHypermediaService hypermediaService)
+  {
+    this.hypermediaService = hypermediaService;
+  }
+
+  [HttpGet]
+  [Route("", Name = "GetPeople")]
+  public IActionResult Get()
+  {
+    var collectionModel = new CollectionModel<Person>();
+
+    return Ok(hypermediaService
+      .AddSelf(collectionModel)
+      .AddRouteTemplate("get", "GetPerson")
+      .Document);
+  }
+
+  [HttpGet]
+  [Route("{id}", Name = "GetPerson")]
+  public IActionResult Get(long id)
+  {
+    throw new NotImplementedException();
+  }
+}
+```
+
+The code above will produce an API response in JSON format like the example below.
+
+```json
+{
+  "items": [],
+  "_links": {
+    "self": {
+      "href": "https://your.api.com/person",
+      "method": "GET"
+    },
+    "get": {
+      "href": "https://your.api.com/person/{id}",
+      "method": "GET",
+      "templated": true
+    }
+  }
+}
+```
+
+Take note, calling the `AddRouteTemplate()` method without enabling templated links will result in an exception.
+
+### External
+
+To add an external link with an _HTTP method_, use the `AddLink()` method in the `iHeartLinks.AspNetCore.Extensions` namespace.
+
+```csharp
+hypermediaService
+  .AddSelf(model)
+  .AddLink("profile", "https://social-media.example.com/api/profile/5B94C11F-FB12-415D-9F75-8E1832F0D6F8", "GET"))
+  .Document;
+```
+
+## Extending
+
+If there is a need to return custom link properties from `IHypermediaService`, this can be achieved by doing the following.
+
+Create a custom link class that inherits from [Link](src/iHeartLinks.Core/Link.cs). This is demonstrated in the code below. In addition, see [HttpLink](src/iHeartLinks.AspNetCore/Extensions/HttpLink.cs) as a guide.
+
+```csharp
+using iHeartLinks.Core;
+
+public class CustomLink : Link
+{
+  public CustomLink(string href, string title)
+    : base(href)
+  {
+    Title = title;
+  }
+
+  public new string Href => base.Href;
+
+  public string Title { get; }
+}
+```
+
+Create a custom enricher by implementing the [ILinkDataEnricher](src/iHeartLinks.AspNetCore/Enrichers/ILinkDataEnricher.cs) interface. See [HttpMethodEnricher](src/iHeartLinks.AspNetCore/Extensions/HttpMethodEnricher.cs) as a guide.
+
+The custom enricher must be registered in the service collections in the `Startup` code. It can added by using the `HypermediaServiceBuilder` object.
+
+```csharp
+using iHeartLinks.AspNetCore;
+
+public class Startup
+{
+  public void ConfigureServices(IServicesCollection services)
+  {
+    services.AddHateoas(b => b.AddLinkEnricher<TitleEnricher>());
+  }
+}
+```
+
+Finally, the custom link properties added in the custom enricher must be mapped in a custom [ILinkFactory](src/iHeartLinks.AspNetCore/LinkFactories/ILinkFactory.cs). See [HttpLinkFactory](src/iHeartLinks.AspNetCore/Extensions/HttpLinkFactory.cs) as a guide. Similarly, the custom link factory must be registered in the service collections in the `Startup` code.
 
 ## Difference with other libraries
 
