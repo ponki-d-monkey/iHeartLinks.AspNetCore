@@ -93,34 +93,6 @@ namespace iHeartLinks.AspNetCore
             return DoAddRouteLink(builder, rel, routeName, args);
         }
 
-        public static IHypermediaBuilder<TDocument> AddRouteTemplate<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName)
-            where TDocument : IHypermediaDocument
-        {
-            ValidateCommonParameters(builder, rel, routeName);
-
-            var service = builder.Service;
-            var href = service.GetUrlTemplate(routeName);
-            if (string.IsNullOrWhiteSpace(href))
-            {
-                throw new InvalidOperationException($"No href value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
-
-            var method = service.GetMethod(routeName);
-            if (string.IsNullOrWhiteSpace(method))
-            {
-                throw new InvalidOperationException($"No HTTP method value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
-
-            var link = new Link(href, method)
-            {
-                Templated = true
-            };
-
-            builder.AddLink(rel, link);
-
-            return builder;
-        }
-
         private static void ValidateCommonParameters<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName) where TDocument : IHypermediaDocument
         {
             if (builder == null)
@@ -142,20 +114,9 @@ namespace iHeartLinks.AspNetCore
         public static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName)
             where TDocument : IHypermediaDocument
         {
-            var service = builder.Service;
-            var href = service.GetUrl(routeName);
-            if (string.IsNullOrWhiteSpace(href))
-            {
-                throw new InvalidOperationException($"No href value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
+            var link = builder.Service.GetLink(routeName, null);
 
-            var method = service.GetMethod(routeName);
-            if (string.IsNullOrWhiteSpace(method))
-            {
-                throw new InvalidOperationException($"No HTTP method value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
-
-            builder.AddLink(rel, href, method);
+            builder.AddLink(rel, link);
 
             return builder;
         }
@@ -163,20 +124,9 @@ namespace iHeartLinks.AspNetCore
         public static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName, object args)
             where TDocument : IHypermediaDocument
         {
-            var service = builder.Service;
-            var href = service.GetUrl(routeName, args);
-            if (string.IsNullOrWhiteSpace(href))
-            {
-                throw new InvalidOperationException($"No href value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
+            var link = builder.Service.GetLink(routeName, args);
 
-            var method = service.GetMethod(routeName);
-            if (string.IsNullOrWhiteSpace(method))
-            {
-                throw new InvalidOperationException($"No HTTP method value exists with the given route name. Value of '{nameof(routeName)}': {routeName}");
-            }
-
-            builder.AddLink(rel, href, method);
+            builder.AddLink(rel, link);
 
             return builder;
         }

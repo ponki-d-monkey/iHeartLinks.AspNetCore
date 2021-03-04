@@ -14,9 +14,9 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         }
 
         [Fact]
-        public void GetBaseUrlShouldReturnEmptyString()
+        public void ProvideShouldReturnEmptyString()
         {
-            var result = sut.GetBaseUrl();
+            var result = sut.Provide();
 
             result.Should().BeEmpty();
         }

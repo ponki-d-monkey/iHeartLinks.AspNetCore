@@ -9,15 +9,10 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
 
         public CurrentRequestBaseUrlProvider(IHttpContextAccessor httpContextAccessor)
         {
-            if (httpContextAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(httpContextAccessor));
-            }
-
-            this.httpContextAccessor = httpContextAccessor;
+            this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public string GetBaseUrl()
+        public string Provide()
         {
             var request = httpContextAccessor.HttpContext.Request;
 

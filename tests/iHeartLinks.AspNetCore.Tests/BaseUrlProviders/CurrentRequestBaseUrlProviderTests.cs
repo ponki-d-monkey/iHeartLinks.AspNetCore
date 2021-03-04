@@ -35,9 +35,9 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         }
 
         [Fact]
-        public void GetBaseUrlShouldBuildUrlFromRequest()
+        public void ProvideShouldBuildUrlFromRequest()
         {
-            var result = sut.GetBaseUrl();
+            var result = sut.Provide();
 
             result.Should().Be($"{TestScheme}://{TestHost}");
 

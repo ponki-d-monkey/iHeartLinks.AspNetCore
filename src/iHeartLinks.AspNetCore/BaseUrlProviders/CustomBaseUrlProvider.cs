@@ -2,24 +2,24 @@
 
 namespace iHeartLinks.AspNetCore.BaseUrlProviders
 {
-    public sealed class CustomBaseUrlProvider : IBaseUrlProvider
+    public class CustomBaseUrlProvider : IBaseUrlProvider
     {
-        private readonly string customUrl;
+        private readonly string baseUrl;
 
-        public CustomBaseUrlProvider(string customUrl)
+        public CustomBaseUrlProvider(string baseUrl)
         {
-            if (string.IsNullOrWhiteSpace(customUrl) || 
-                !Uri.IsWellFormedUriString(customUrl, UriKind.RelativeOrAbsolute))
+            if (string.IsNullOrWhiteSpace(baseUrl) || 
+                !Uri.IsWellFormedUriString(baseUrl, UriKind.RelativeOrAbsolute))
             {
-                throw new ArgumentException($"Parameter '{nameof(customUrl)}' must not be null or empty and must be a valid URL.");
+                throw new ArgumentException($"Parameter '{nameof(baseUrl)}' must not be null or empty and must be a valid URL.");
             }
 
-            this.customUrl = customUrl;
+            this.baseUrl = baseUrl;
         }
 
-        public string GetBaseUrl()
+        public string Provide()
         {
-            return customUrl;
+            return baseUrl;
         }
     }
 }

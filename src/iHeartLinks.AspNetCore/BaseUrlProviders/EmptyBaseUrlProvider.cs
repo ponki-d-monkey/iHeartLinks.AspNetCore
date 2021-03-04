@@ -2,7 +2,7 @@
 {
     public sealed class EmptyBaseUrlProvider : IBaseUrlProvider
     {
-        public string GetBaseUrl()
+        public string Provide()
         {
             return string.Empty;
         }

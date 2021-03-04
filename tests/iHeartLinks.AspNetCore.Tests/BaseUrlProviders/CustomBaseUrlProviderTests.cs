@@ -12,12 +12,12 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("some random text")]
-        public void CtorShouldThrowArgumentExceptionWhenCustomUrlIs(string customUrl)
+        public void CtorShouldThrowArgumentExceptionWhenBaseUrlIs(string baseUrl)
         {
-            Action action = () => new CustomBaseUrlProvider(customUrl);
+            Action action = () => new CustomBaseUrlProvider(baseUrl);
 
             var exception = action.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'customUrl' must not be null or empty and must be a valid URL.");
+            exception.Message.Should().Be("Parameter 'baseUrl' must not be null or empty and must be a valid URL.");
             exception.ParamName.Should().BeNull();
         }
 
@@ -25,13 +25,13 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("https://iheartlinks.example.com")]
         [InlineData("https://iheartlinks.example.com/")]
         [InlineData("https://iheartlinks.example.com//")]
-        public void GetBaseUrlShouldReturnCustomUrl(string customUrl)
+        public void ProvideShouldReturnBaseUrl(string baseUrl)
         {
-            var sut = new CustomBaseUrlProvider(customUrl);
+            var sut = new CustomBaseUrlProvider(baseUrl);
 
-            var result = sut.GetBaseUrl();
+            var result = sut.Provide();
 
-            result.Should().Be(customUrl);
+            result.Should().Be(baseUrl);
         }
     }
 }

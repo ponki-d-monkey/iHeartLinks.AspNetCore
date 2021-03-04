@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
-using Microsoft.AspNetCore.Http;
+using iHeartLinks.AspNetCore.Enrichers;
+using iHeartLinks.AspNetCore.LinkFactories;
+using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -16,307 +17,305 @@ namespace iHeartLinks.AspNetCore.Tests
 {
     public sealed class HypermediaServiceTests
     {
-        private const string TestMethod = "GET";
         private const string TestRouteName = "TestRouteName";
         private const string TestRouteUrl = "/person/1";
-        private const string TestRouteTemplate = "person/{id}";
         private const string TestBaseUrl = "https://iheartlinks.example.com";
 
-        private readonly Mock<IBaseUrlProvider> mockBaseUrlProvider;
-        private readonly Mock<IOptions<HypermediaServiceOptions>> mockOptions;
-        private readonly Mock<IUrlHelper> mockUrlHelper;
         private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
-        private readonly Mock<IActionDescriptorCollectionProvider> mockProvider;
+        private readonly Mock<ILinkRequestProcessor> mockLinkRequestProcessor;
+        private readonly Mock<IBaseUrlProvider> mockBaseUrlProvider;
+        private readonly Mock<IUrlProvider> mockUrlProvider;
+        private readonly Mock<ILinkDataEnricher> mockLinkDataEnricher;
+        private readonly Mock<ILinkFactory> mockLinkFactory;
 
         private readonly HypermediaService sut;
 
         public HypermediaServiceTests()
         {
-            mockBaseUrlProvider = new Mock<IBaseUrlProvider>();
-            mockBaseUrlProvider
-                .Setup(x => x.GetBaseUrl())
-                .Returns(TestBaseUrl);
-
-            mockOptions = new Mock<IOptions<HypermediaServiceOptions>>();
-            mockOptions
-                .Setup(x => x.Value)
-                .Returns(new HypermediaServiceOptions
-                {
-                    BaseUrlProvider = mockBaseUrlProvider.Object
-                });
-
-            mockUrlHelper = new Mock<IUrlHelper>();
-            SetupUrlHelper();
-
             mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
             mockUrlHelperBuilder
                 .Setup(x => x.Build())
-                .Returns(mockUrlHelper.Object);
+                .Returns(CreateUrlHelper);
 
-            mockProvider = new Mock<IActionDescriptorCollectionProvider>();
-            SetupProvider();
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
+            {
+                { LinkRequest.IdKey, TestRouteName }
+            });
+
+            mockLinkRequestProcessor = new Mock<ILinkRequestProcessor>();
+            mockLinkRequestProcessor
+                .Setup(x => x.Process(It.Is<string>(x => x == TestRouteName)))
+                .Returns(linkRequest);
+
+            mockBaseUrlProvider = new Mock<IBaseUrlProvider>();
+            mockBaseUrlProvider
+                .Setup(x => x.Provide())
+                .Returns(TestBaseUrl);
+
+            mockUrlProvider = new Mock<IUrlProvider>();
+            mockUrlProvider
+                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
+                .Returns(new Uri(TestRouteUrl, UriKind.RelativeOrAbsolute));
+
+            mockLinkDataEnricher = new Mock<ILinkDataEnricher>();
+            mockLinkFactory = new Mock<ILinkFactory>();
 
             sut = new HypermediaService(
-                mockOptions.Object,
-                mockUrlHelperBuilder.Object, 
-                mockProvider.Object);
+                mockUrlHelperBuilder.Object,
+                mockLinkRequestProcessor.Object,
+                mockBaseUrlProvider.Object,
+                mockUrlProvider.Object,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                mockLinkFactory.Object);
         }
 
-        [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenHypermediaServiceOptionsIsNull()
+        public static IEnumerable<object[]> TestArgs = new List<object[]>
         {
-            Action action = () => new HypermediaService(default, mockUrlHelperBuilder.Object, mockProvider.Object);
-
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("options");
-        }
-
-        [Fact]
-        public void CtorShouldInvokeBaseUrlProviderGetBaseUrlMethod()
-        {
-            mockBaseUrlProvider.Verify(x => x.GetBaseUrl(), Times.Once);
-        }
+            new[] { default(object) },
+            new[] { new object() }
+        };
 
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
         {
-            Action action = () => new HypermediaService(mockOptions.Object, default, mockProvider.Object);
+            Action action = () => new HypermediaService(
+                default,
+                mockLinkRequestProcessor.Object,
+                mockBaseUrlProvider.Object,
+                mockUrlProvider.Object,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                mockLinkFactory.Object);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
         }
 
         [Fact]
-        public void CtorShouldThrowArgumentNullExceptionWhenActionDescriptorCollectionProviderIsNull()
+        public void CtorShouldThrowArgumentNullExceptionWhenLinkRequestProcessorIsNull()
         {
-            Action action = () => new HypermediaService(mockOptions.Object, mockUrlHelperBuilder.Object, default);
+            Action action = () => new HypermediaService(
+                mockUrlHelperBuilder.Object,
+                default,
+                mockBaseUrlProvider.Object,
+                mockUrlProvider.Object,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                mockLinkFactory.Object);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("provider");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequestProcessor");
         }
 
         [Fact]
-        public void GetCurrentMethodShouldMethod()
+        public void CtorShouldThrowArgumentNullExceptionWhenBaseUrlProviderIsNull()
         {
-            var result = sut.GetCurrentMethod();
+            Action action = () => new HypermediaService(
+                mockUrlHelperBuilder.Object,
+                mockLinkRequestProcessor.Object,
+                default,
+                mockUrlProvider.Object,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                mockLinkFactory.Object);
 
-            result.Should().Be(TestMethod);
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("baseUrlProvider");
         }
 
         [Fact]
-        public void GetCurrentUrlShouldReturnCurrentUrl()
+        public void CtorShouldThrowArgumentNullExceptionWhenUrlProviderIsNull()
         {
-            var result = sut.GetCurrentUrl();
+            Action action = () => new HypermediaService(
+                mockUrlHelperBuilder.Object,
+                mockLinkRequestProcessor.Object,
+                mockBaseUrlProvider.Object,
+                default,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                mockLinkFactory.Object);
 
-            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
-
-            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlProvider");
         }
 
         [Fact]
-        public void GetCurrentUrlTemplateShouldReturnUrlTemplate()
+        public void CtorShouldThrowArgumentNullExceptionWhenCollectionOfLinkDataEnrichersIsNull()
         {
-            var result = sut.GetCurrentUrlTemplate();
+            Action action = () => new HypermediaService(
+                mockUrlHelperBuilder.Object,
+                mockLinkRequestProcessor.Object,
+                mockBaseUrlProvider.Object,
+                mockUrlProvider.Object,
+                default,
+                mockLinkFactory.Object);
 
-            result.Should().Be($"{TestBaseUrl}/{TestRouteTemplate}");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkDataEnrichers");
+        }
+
+        [Fact]
+        public void CtorShouldThrowArgumentNullExceptionWhenLinkFactoryIsNull()
+        {
+            Action action = () => new HypermediaService(
+                mockUrlHelperBuilder.Object,
+                mockLinkRequestProcessor.Object,
+                mockBaseUrlProvider.Object,
+                mockUrlProvider.Object,
+                new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
+                default);
+
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkFactory");
+        }
+
+        [Fact]
+        public void GetLinkShouldBuildUrlHelper()
+        {
+            sut.GetLink();
+
+            mockUrlHelperBuilder.Verify(x => x.Build(), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldProcessRequest()
+        {
+            sut.GetLink();
+
+            mockLinkRequestProcessor.Verify(x => x.Process(It.Is<string>(x => x == TestRouteName)), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldProvideBaseUrl()
+        {
+            sut.GetLink();
+
+            mockBaseUrlProvider.Verify(x => x.Provide(), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldProvideUrl()
+        {
+            sut.GetLink();
+
+            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == null)), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldEnrichLinkData()
+        {
+            sut.GetLink();
+
+            mockLinkDataEnricher.Verify(x => x.Enrich(It.Is<LinkRequest>(x => x.Id == TestRouteName), It.IsNotNull<LinkDataWriter>()), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldCreateLink()
+        {
+            var href = $"{TestBaseUrl}{TestRouteUrl}";
+            var result = sut.GetLink();
+
+            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref() == href)), Times.Once);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void GetMethodShouldThrowArgumentExceptionWhenKeyIs(string key)
+        public void GetLinkWithParametersShouldThrowArgumentExceptionWhenRequestIs(string request)
         {
-            Func<string> func = () => sut.GetMethod(key);
+            Func<Link> func = () => sut.GetLink(request, new object());
 
             var exception = func.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'key' must not be null or empty.");
+            exception.Message.Should().Be("Parameter 'request' must not be null or empty.");
             exception.ParamName.Should().BeNull();
         }
 
-        [Fact]
-        public void GetMethodShouldThrowKeyNotFoundExceptionWhenKeyDoesNotExist()
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkWithParametersShouldProcessRequest(object args)
         {
-            var nonExistingKey = "NonExistingKey";
+            sut.GetLink(TestRouteName, args);
 
-            Func<string> func = () => sut.GetMethod(nonExistingKey);
-
-            func.Should().Throw<KeyNotFoundException>().Which.Message.Should().Be($"The given key to retrieve the HTTP method does not exist. Value of 'key': {nonExistingKey}");
+            mockLinkRequestProcessor.Verify(x => x.Process(It.Is<string>(x => x == TestRouteName)), Times.Once);
         }
 
-        [Fact]
-        public void GetMethodShouldReturnHttpMethod()
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkParametersShouldThrowInvalidOperationExceptionWhenBaseUrlIsNull(object args)
         {
-            var result = sut.GetMethod(TestRouteName);
+            mockBaseUrlProvider
+                .Setup(x => x.Provide())
+                .Returns(default(string));
 
-            result.Should().Be(TestMethod);
+            Func<Link> func = () => sut.GetLink(TestRouteName, args);
+
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The base URL provider returned a null value. Base URL is required in order to proceed.");
         }
 
-        [Fact]
-        public void GetMethodShouldReturnNullWhenNoHttpMethodExist()
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkWithParametersShouldProvideBaseUrl(object args)
         {
-            var endpointMetadata = new List<object>
+            sut.GetLink(TestRouteName, args);
+
+            mockBaseUrlProvider.Verify(x => x.Provide(), Times.Once);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkParametersShouldThrowInvalidOperationExceptionWhenUrlPathIsNull(object args)
+        {
+            mockUrlProvider
+                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
+                .Returns(default(Uri));
+
+            Func<Link> func = () => sut.GetLink(TestRouteName, args);
+
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The URL provider returned a null value. URL path is required in order to proceed.");
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkWithParametersShouldProvideUrl(object args)
+        {
+            sut.GetLink(TestRouteName, args);
+
+            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == args)), Times.Once);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkWithParametersShouldEnrichLinkData(object args)
+        {
+            sut.GetLink(TestRouteName, args);
+
+            mockLinkDataEnricher.Verify(x => x.Enrich(It.Is<LinkRequest>(x => x.Id == TestRouteName), It.IsNotNull<LinkDataWriter>()), Times.Once);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkWithParametersShouldCreateLink(object args)
+        {
+            var href = $"{TestBaseUrl}{TestRouteUrl}";
+            var result = sut.GetLink(TestRouteName, args);
+
+            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref() == href)), Times.Once);
+        }
+
+        private IUrlHelper CreateUrlHelper()
+        {
+            var attributeRouteInfo = new AttributeRouteInfo
             {
-                new HttpMethodMetadata(new string[0])
+                Name = TestRouteName
             };
 
-            SetupProvider(endpointMetadata);
-
-            var result = sut.GetMethod(TestRouteName);
-
-            result.Should().BeNull();
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public void GetUrlShouldThrowArgumentExceptionWhenKeyIs(string key)
-        {
-            Func<string> func = () => sut.GetUrl(key);
-
-            var exception = func.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'key' must not be null or empty.");
-            exception.ParamName.Should().BeNull();
-
-            mockUrlHelper.Verify(x => x.Link(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
-        }
-
-        [Fact]
-        public void GetUrlShouldReturnUrl()
-        {
-            var result = sut.GetUrl(TestRouteName);
-
-            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
-
-            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public void GetUrlWithArgsShouldThrowArgumentExceptionWhenKeyIs(string key)
-        {
-            Func<string> func = () => sut.GetUrl(key, new { id = 1 });
-
-            var exception = func.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'key' must not be null or empty.");
-            exception.ParamName.Should().BeNull();
-
-            mockUrlHelper.Verify(x => x.Link(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
-        }
-
-        [Fact]
-        public void GetUrlWithArgsShouldThrowArgumentNullExceptionWhenArgsIsNull()
-        {
-            Func<string> func = () => sut.GetUrl(TestRouteName, null);
-
-            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("args");
-
-            mockUrlHelper.Verify(x => x.Link(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
-        }
-
-        [Fact]
-        public void GetUrlWitArgsShouldReturnUrl()
-        {
-            var result = sut.GetUrl(TestRouteName, new { id = 1 });
-
-            result.Should().Be($"{TestBaseUrl}{TestRouteUrl}");
-
-            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)), Times.Once);
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public void GetUrlTemplateShouldThrowArgumentExceptionWhenKeyIs(string key)
-        {
-            Func<string> func = () => sut.GetUrlTemplate(key);
-
-            var exception = func.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'key' must not be null or empty.");
-            exception.ParamName.Should().BeNull();
-        }
-
-        [Fact]
-        public void GetUrlTemplateShouldThrowKeyNotFoundExceptionWhenKeyDoesNotExist()
-        {
-            var nonExistingKey = "NonExistingKey";
-
-            Func<string> func = () => sut.GetUrlTemplate(nonExistingKey);
-
-            func.Should().Throw<KeyNotFoundException>().Which.Message.Should().Be($"The given key to retrieve the URL template does not exist. Value of 'key': {nonExistingKey}");
-        }
-
-        [Fact]
-        public void GetUrlTemplateShouldReturnUrlTemplate()
-        {
-            var result = sut.GetUrlTemplate(TestRouteName);
-
-            result.Should().Be($"{TestBaseUrl}/{TestRouteTemplate}");
-        }
-
-        private void SetupUrlHelper()
-        {
-            var mockHttpRequest = new Mock<HttpRequest>();
-            mockHttpRequest
-                .Setup(x => x.Method)
-                .Returns(TestMethod);
-
-            var mockHttpContext = new Mock<HttpContext>();
-            mockHttpContext
-                .Setup(x => x.Request)
-                .Returns(mockHttpRequest.Object);
-
-            var attributeRouteInfo = new AttributeRouteInfo 
-            { 
-                Name = TestRouteName,
-                Template = TestRouteTemplate
+            var actionDescriptor = new ActionDescriptor
+            {
+                AttributeRouteInfo = attributeRouteInfo
             };
 
-            var actionDescriptor = new ActionDescriptor { AttributeRouteInfo = attributeRouteInfo };
-            var actionContext = new ActionContext 
-            { 
-                HttpContext = mockHttpContext.Object,
-                ActionDescriptor = actionDescriptor 
+            var actionContext = new ActionContext
+            {
+                ActionDescriptor = actionDescriptor
             };
 
+            var mockUrlHelper = new Mock<IUrlHelper>();
             mockUrlHelper
                 .Setup(x => x.ActionContext)
                 .Returns(actionContext);
 
-            mockUrlHelper
-                .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(y => y.RouteName == TestRouteName)))
-                .Returns(TestRouteUrl);
-        }
-
-        private void SetupProvider()
-        {
-            var endpointMetadata = new List<object>
-            {
-                new HttpMethodMetadata(new string[] { TestMethod })
-            };
-
-            SetupProvider(endpointMetadata);
-        }
-
-        private void SetupProvider(List<object> endpointMetadata)
-        {
-            var actionDescriptors = new List<ActionDescriptor>
-            {
-                new ActionDescriptor
-                {
-                    EndpointMetadata = endpointMetadata,
-                    AttributeRouteInfo = new AttributeRouteInfo 
-                    { 
-                        Name = TestRouteName,
-                        Template = TestRouteTemplate
-                    }
-                }
-            };
-
-            mockProvider
-                .Setup(x => x.ActionDescriptors)
-                .Returns(new ActionDescriptorCollection(actionDescriptors.AsReadOnly(), 1));
+            return mockUrlHelper.Object;
         }
     }
 }
