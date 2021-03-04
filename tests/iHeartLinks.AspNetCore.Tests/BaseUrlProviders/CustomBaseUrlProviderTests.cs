@@ -12,7 +12,7 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("some random text")]
-        public void CtorShouldThrowArgumentExceptionWhenCustomUrlIs(string baseUrl)
+        public void CtorShouldThrowArgumentExceptionWhenBaseUrlIs(string baseUrl)
         {
             Action action = () => new CustomBaseUrlProvider(baseUrl);
 
@@ -25,13 +25,13 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("https://iheartlinks.example.com")]
         [InlineData("https://iheartlinks.example.com/")]
         [InlineData("https://iheartlinks.example.com//")]
-        public void ProvideShouldReturnCustomUrl(string customUrl)
+        public void ProvideShouldReturnBaseUrl(string baseUrl)
         {
-            var sut = new CustomBaseUrlProvider(customUrl);
+            var sut = new CustomBaseUrlProvider(baseUrl);
 
             var result = sut.Provide();
 
-            result.Should().Be(customUrl);
+            result.Should().Be(baseUrl);
         }
     }
 }

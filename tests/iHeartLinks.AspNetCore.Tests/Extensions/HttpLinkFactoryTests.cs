@@ -33,8 +33,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var context = new LinkFactoryContext();
             context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
             context.Set(LinkFactoryContext.UrlPathKey, urlPath);
-            context.Set("httpMethod", "GET");
-            context.Set("templated", true);
+            context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
+            context.Set(IsTemplatedEnricher.TemplatedKey, true);
 
             var result = sut.Create(context);
             result.Should().NotBeNull();
@@ -57,7 +57,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var context = new LinkFactoryContext();
             context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
             context.Set(LinkFactoryContext.UrlPathKey, urlPath);
-            context.Set("httpMethod", "GET");
+            context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
 
             var result = sut.Create(context);
             var httpLink = result.As<HttpLink>();
@@ -73,8 +73,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var context = new LinkFactoryContext();
             context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
             context.Set(LinkFactoryContext.UrlPathKey, urlPath);
-            context.Set("httpMethod", "GET");
-            context.Set("templated", false);
+            context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
+            context.Set(IsTemplatedEnricher.TemplatedKey, false);
 
             var result = sut.Create(context);
             var httpLink = result.As<HttpLink>();

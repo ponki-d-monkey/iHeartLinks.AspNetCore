@@ -17,7 +17,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
     public sealed class HttpMethodEnricherTests
     {
         private const string TestId = "TestId";
-        private const string HttpMethodKey = "httpMethod";
         private const string TestHttpMethod = "GET";
 
         private readonly IDictionary<string, string> keyParts;
@@ -82,7 +81,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         {
             sut.Enrich(linkRequest, writer);
 
-            var result = context.Get(HttpMethodKey);
+            var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().Be(TestHttpMethod);
         }
 
@@ -97,7 +96,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             sut.Enrich(linkRequest, writer);
 
-            var result = context.Get(HttpMethodKey);
+            var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().BeNull();
         }
 
@@ -115,7 +114,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             sut.Enrich(linkRequest, writer);
 
-            var result = context.Get(HttpMethodKey);
+            var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().BeNull();
         }
 
