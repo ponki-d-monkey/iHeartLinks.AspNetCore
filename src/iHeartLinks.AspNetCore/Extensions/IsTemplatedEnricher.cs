@@ -1,11 +1,12 @@
 ﻿using System;
+using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 
-namespace iHeartLinks.AspNetCore.Enrichers
+namespace iHeartLinks.AspNetCore.Extensions
 {
     public sealed class IsTemplatedEnricher : ILinkDataEnricher
     {
-        private const string TemplatedKey = "templated";
+        public const string TemplatedKey = "templated";
 
         public void Enrich(LinkRequest linkRequest, LinkDataWriter writer)
         {

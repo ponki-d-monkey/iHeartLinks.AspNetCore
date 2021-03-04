@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
 using Xunit;
 

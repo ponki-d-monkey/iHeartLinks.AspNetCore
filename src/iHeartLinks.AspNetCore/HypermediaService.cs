@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace iHeartLinks.AspNetCore
 {
-    public class HypermediaService : IHypermediaService
+    public sealed class HypermediaService : IHypermediaService
     {
         private readonly Lazy<IUrlHelper> urlHelper;
         private readonly ILinkRequestProcessor linkRequestProcessor;
@@ -53,12 +53,22 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentException($"Parameter '{nameof(request)}' must not be null or empty.");
             }
 
-            var linkRequest = linkRequestProcessor.Process(request);
             var baseUrl = baseUrlProvider.Provide();
+            if (baseUrl == null)
+            {
+                throw new InvalidOperationException("The base URL provider returned a null value. Base URL is required in order to proceed.");
+            }
+
+            var linkRequest = linkRequestProcessor.Process(request);
             var urlPath = urlProvider.Provide(new UrlProviderContext(linkRequest)
             {
                 Args = args
             });
+
+            if (urlPath == null)
+            {
+                throw new InvalidOperationException("The URL provider returned a null value. URL path is required in order to proceed.");
+            }
 
             var linkFactoryContext = new LinkFactoryContext()
                 .SetBaseUrl(baseUrl)

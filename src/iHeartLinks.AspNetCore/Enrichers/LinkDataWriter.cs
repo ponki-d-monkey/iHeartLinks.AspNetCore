@@ -3,7 +3,7 @@ using iHeartLinks.AspNetCore.LinkFactories;
 
 namespace iHeartLinks.AspNetCore.Enrichers
 {
-    public class LinkDataWriter
+    public sealed class LinkDataWriter
     {
         private readonly LinkFactoryContext context;
 

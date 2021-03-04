@@ -1,10 +1,11 @@
 ﻿using System;
 using FluentAssertions;
+using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.Core;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.LinkFactories
+namespace iHeartLinks.AspNetCore.Tests.Extensions
 {
     public sealed class HttpLinkFactoryTests
     {

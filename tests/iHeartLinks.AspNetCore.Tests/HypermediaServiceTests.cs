@@ -232,11 +232,37 @@ namespace iHeartLinks.AspNetCore.Tests
 
         [Theory]
         [MemberData(nameof(TestArgs))]
+        public void GetLinkParametersShouldThrowInvalidOperationExceptionWhenBaseUrlIsNull(object args)
+        {
+            mockBaseUrlProvider
+                .Setup(x => x.Provide())
+                .Returns(default(string));
+
+            Func<Link> func = () => sut.GetLink(TestRouteName, args);
+
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The base URL provider returned a null value. Base URL is required in order to proceed.");
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
         public void GetLinkWithParametersShouldProvideBaseUrl(object args)
         {
             sut.GetLink(TestRouteName, args);
 
             mockBaseUrlProvider.Verify(x => x.Provide(), Times.Once);
+        }
+
+        [Theory]
+        [MemberData(nameof(TestArgs))]
+        public void GetLinkParametersShouldThrowInvalidOperationExceptionWhenUrlPathIsNull(object args)
+        {
+            mockUrlProvider
+                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
+                .Returns(default(Uri));
+
+            Func<Link> func = () => sut.GetLink(TestRouteName, args);
+
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The URL provider returned a null value. URL path is required in order to proceed.");
         }
 
         [Theory]

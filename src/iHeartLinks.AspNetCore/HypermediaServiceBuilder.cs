@@ -1,21 +1,19 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
-using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace iHeartLinks.AspNetCore
 {
-    public sealed class HypermediaServiceBuilder
+    public class HypermediaServiceBuilder
     {
         public HypermediaServiceBuilder(IServiceCollection services)
         {
             Services = services ?? throw new ArgumentNullException(nameof(services));
         }
 
-        private IServiceCollection Services { get; }
+        public IServiceCollection Services { get; }
 
         public HypermediaServiceBuilder UseAbsoluteUrlHref()
         {
@@ -41,24 +39,6 @@ namespace iHeartLinks.AspNetCore
             }
 
             Services.Replace(ServiceDescriptor.Transient<IBaseUrlProvider>(x => new CustomBaseUrlProvider(baseUrl)));
-
-            return this;
-        }
-
-        public HypermediaServiceBuilder UseHttpLink()
-        {
-            AllowTemplatedHref();
-            AddLinkEnricher<IsTemplatedEnricher>();
-            AddLinkEnricher<HttpMethodEnricher>();
-
-            Services.Replace(ServiceDescriptor.Transient<ILinkFactory, HttpLinkFactory>());
-
-            return this;
-        }
-
-        public HypermediaServiceBuilder AllowTemplatedHref()
-        {
-            Services.Replace(ServiceDescriptor.Transient<IUrlProvider, WithTemplatedUrlProvider>());
 
             return this;
         }

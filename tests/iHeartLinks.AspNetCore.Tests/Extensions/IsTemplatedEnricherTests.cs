@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
+using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.Enrichers
+namespace iHeartLinks.AspNetCore.Tests.Extensions
 {
     public sealed class IsTemplatedEnricherTests
     {

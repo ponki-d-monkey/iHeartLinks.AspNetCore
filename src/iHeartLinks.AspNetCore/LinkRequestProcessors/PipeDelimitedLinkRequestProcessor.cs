@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace iHeartLinks.AspNetCore.LinkRequestProcessors
 {
-    public class PipeDelimitedLinkRequestProcessor : ILinkRequestProcessor
+    public sealed class PipeDelimitedLinkRequestProcessor : ILinkRequestProcessor
     {
         public LinkRequest Process(string request)
         {

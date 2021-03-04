@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
+using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Moq;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.UrlProviders
+namespace iHeartLinks.AspNetCore.Tests.Extensions
 {
     public sealed class WithTemplatedUrlProviderTests
     {

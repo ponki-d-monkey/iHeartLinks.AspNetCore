@@ -4,8 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
-using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -201,119 +200,6 @@ namespace iHeartLinks.AspNetCore.Tests
         public void UseCustomBaseUrlHrefShouldReturnSameInstanceOfHypermediaServiceBuilder()
         {
             var result = sut.UseCustomBaseUrlHref(TestCustomBaseUrl);
-
-            result.Should().BeSameAs(sut);
-        }
-
-        [Fact]
-        public void UseHttpLinkShouldAddRequiredDependencies()
-        {
-            sut.UseHttpLink();
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(IUrlProvider) &&
-                   y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(ILinkDataEnricher) &&
-                   y.ImplementationType == typeof(IsTemplatedEnricher) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(ILinkDataEnricher) &&
-                   y.ImplementationType == typeof(HttpMethodEnricher) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-
-            mockServices.Verify(x => x.Remove(It.Is<ServiceDescriptor>(x => x.ServiceType == typeof(ILinkFactory))), Times.Never);
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(ILinkFactory) &&
-                   y.ImplementationType == typeof(HttpLinkFactory) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-        }
-
-        [Fact]
-        public void UseHttpLinkShouldReplaceLinkFactoryWithHttpLinkFactoryWhenExisting()
-        {
-            var serviceDescriptors = new List<ServiceDescriptor>
-            {
-                ServiceDescriptor.Transient<ILinkFactory, LinkFactory>()
-            };
-
-            mockServices
-                .Setup(x => x.GetEnumerator())
-                .Returns(serviceDescriptors.AsEnumerable().GetEnumerator());
-
-            sut.UseHttpLink();
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(ILinkFactory) &&
-                   y.ImplementationType == typeof(HttpLinkFactory) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-        }
-
-        [Fact]
-        public void UseHttpLinkShouldReturnSameInstanceOfHypermediaServiceBuilder()
-        {
-            var result = sut.UseHttpLink();
-
-            result.Should().BeSameAs(sut);
-        }
-
-        [Fact]
-        public void AllowTemplatedHrefShouldAddWithTemplatedUrlProviderWhenItDoesNotExist()
-        {
-            sut.AllowTemplatedHref();
-
-            mockServices.Verify(x => x.Remove(It.Is<ServiceDescriptor>(x => x.ServiceType == typeof(IUrlProvider))), Times.Never);
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(IUrlProvider) &&
-                   y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-        }
-
-        [Fact]
-        public void AllowTemplatedHrefShouldReplaceUrlProviderWithWithTemplatedUrlProviderWhenExisting()
-        {
-            var serviceDescriptors = new List<ServiceDescriptor>
-            {
-                ServiceDescriptor.Transient<IUrlProvider, NonTemplatedUrlProvider>()
-            };
-
-            mockServices
-                .Setup(x => x.GetEnumerator())
-                .Returns(serviceDescriptors.AsEnumerable().GetEnumerator());
-
-            sut.AllowTemplatedHref();
-
-            mockServices.Verify(x => x.Remove(It.Is<ServiceDescriptor>(x => x.ServiceType == typeof(IUrlProvider))), Times.Once);
-
-            mockServices.Verify(x =>
-               x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(IUrlProvider) &&
-                   y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
-                   y.Lifetime == ServiceLifetime.Transient)),
-               Times.Once);
-        }
-
-        [Fact]
-        public void AllowTemplatedHrefShouldReturnSameInstanceOfHypermediaServiceBuilder()
-        {
-            var result = sut.AllowTemplatedHref();
 
             result.Should().BeSameAs(sut);
         }

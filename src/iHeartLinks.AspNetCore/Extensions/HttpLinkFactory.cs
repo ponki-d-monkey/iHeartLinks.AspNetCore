@@ -1,14 +1,15 @@
-﻿using iHeartLinks.Core;
+﻿using iHeartLinks.AspNetCore.LinkFactories;
+using iHeartLinks.Core;
 
-namespace iHeartLinks.AspNetCore.LinkFactories
+namespace iHeartLinks.AspNetCore.Extensions
 {
     public sealed class HttpLinkFactory : LinkFactory
     {
         protected override Link DoCreate(LinkFactoryContext context)
         {
             return context
-                .MapTo((h, c) => new HttpLink(h, c.Get("httpMethod").ToString()))
-                .MapIfExisting<bool>("templated", (l, v) =>
+                .MapTo((h, c) => new HttpLink(h, c.Get(HttpMethodEnricher.HttpMethodKey).ToString()))
+                .MapIfExisting<bool>(IsTemplatedEnricher.TemplatedKey, (l, v) =>
                 {
                     if (v)
                     {

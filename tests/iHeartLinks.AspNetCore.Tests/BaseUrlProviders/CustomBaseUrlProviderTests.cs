@@ -12,12 +12,12 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("some random text")]
-        public void CtorShouldThrowArgumentExceptionWhenCustomUrlIs(string customUrl)
+        public void CtorShouldThrowArgumentExceptionWhenCustomUrlIs(string baseUrl)
         {
-            Action action = () => new CustomBaseUrlProvider(customUrl);
+            Action action = () => new CustomBaseUrlProvider(baseUrl);
 
             var exception = action.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'customUrl' must not be null or empty and must be a valid URL.");
+            exception.Message.Should().Be("Parameter 'baseUrl' must not be null or empty and must be a valid URL.");
             exception.ParamName.Should().BeNull();
         }
 

@@ -3,7 +3,7 @@ using iHeartLinks.AspNetCore.LinkRequestProcessors;
 
 namespace iHeartLinks.AspNetCore.UrlProviders
 {
-    public class UrlProviderContext
+    public sealed class UrlProviderContext
     {
         public UrlProviderContext(LinkRequest linkRequest)
         {

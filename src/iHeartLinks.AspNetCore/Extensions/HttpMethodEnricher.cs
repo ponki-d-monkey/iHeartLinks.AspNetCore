@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Linq;
+using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 
-namespace iHeartLinks.AspNetCore.Enrichers
+namespace iHeartLinks.AspNetCore.Extensions
 {
-    public sealed class HttpMethodEnricher : ILinkDataEnricher
+    public class HttpMethodEnricher : ILinkDataEnricher
     {
-        private const string HttpMethodKey = "httpMethod";
+        public const string HttpMethodKey = "httpMethod";
 
         private readonly IActionDescriptorCollectionProvider provider;
 
@@ -36,7 +37,7 @@ namespace iHeartLinks.AspNetCore.Enrichers
             }
         }
 
-        private string GetHttpMethod(string id)
+        protected virtual string GetHttpMethod(string id)
         {
             var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == id);
             if (actionDescriptor == null)

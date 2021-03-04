@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
-namespace iHeartLinks.AspNetCore.UrlProviders
+namespace iHeartLinks.AspNetCore.Extensions
 {
-    public sealed class WithTemplatedUrlProvider : IUrlProvider
+    public class WithTemplatedUrlProvider : IUrlProvider
     {
         private readonly IActionDescriptorCollectionProvider provider;
         private readonly NonTemplatedUrlProvider nonTemplatedUrlProvider;
@@ -50,12 +51,7 @@ namespace iHeartLinks.AspNetCore.UrlProviders
             return nonTemplatedUrlProvider.Provide(context);
         }
 
-        private bool RequiresTemplatedUrl(LinkRequest linkRequest)
-        {
-            return linkRequest.Parts.ContainsKey("templated") && linkRequest.Parts["templated"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
-        }
-
-        private string GetTemplate(string id)
+        protected virtual string GetTemplate(string id)
         {
             var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == id);
             if (actionDescriptor == null)
@@ -64,6 +60,11 @@ namespace iHeartLinks.AspNetCore.UrlProviders
             }
 
             return actionDescriptor.AttributeRouteInfo.Template;
+        }
+
+        private bool RequiresTemplatedUrl(LinkRequest linkRequest)
+        {
+            return linkRequest.Parts.ContainsKey("templated") && linkRequest.Parts["templated"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

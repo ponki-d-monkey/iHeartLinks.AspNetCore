@@ -93,18 +93,6 @@ namespace iHeartLinks.AspNetCore
             return DoAddRouteLink(builder, rel, routeName, args);
         }
 
-        public static IHypermediaBuilder<TDocument> AddRouteTemplate<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName)
-            where TDocument : IHypermediaDocument
-        {
-            ValidateCommonParameters(builder, rel, routeName);
-
-            var link = builder.Service.GetLink($"{routeName}|templated={bool.TrueString.ToLower()}", null);
-
-            builder.AddLink(rel, link);
-
-            return builder;
-        }
-
         private static void ValidateCommonParameters<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName) where TDocument : IHypermediaDocument
         {
             if (builder == null)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
+using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
@@ -351,7 +352,7 @@ namespace iHeartLinks.AspNetCore.Tests
             // unit test for HypermediaServiceBuilder. The important thing is to know that the builder is being invoked.
             sut.AddHateoas(b => b
                 .UseRelativeUrlHref()
-                .UseHttpLink());
+                .UseExtendedLink());
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>

@@ -1,6 +1,6 @@
 ﻿using iHeartLinks.Core;
 
-namespace iHeartLinks.AspNetCore
+namespace iHeartLinks.AspNetCore.Extensions
 {
     public class HttpLink : Link
     {
@@ -9,6 +9,8 @@ namespace iHeartLinks.AspNetCore
         {
             Method = method;
         }
+
+        public new string Href => base.Href;
 
         public string Method { get; }
 

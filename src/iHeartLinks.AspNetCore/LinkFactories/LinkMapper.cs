@@ -3,7 +3,7 @@ using iHeartLinks.Core;
 
 namespace iHeartLinks.AspNetCore.LinkFactories
 {
-    public sealed class LinkMapper<TLink>
+    public class LinkMapper<TLink>
         where TLink : Link
     {
         public LinkMapper(LinkFactoryContext context, TLink link)

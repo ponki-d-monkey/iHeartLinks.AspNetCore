@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace iHeartLinks.AspNetCore.LinkFactories
 {
-    public class LinkFactoryContext
+    public sealed class LinkFactoryContext
     {
         public const string BaseUrlKey = "baseUrl";
         public const string UrlPathKey = "urlPath";
