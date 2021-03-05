@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -10,13 +9,16 @@ namespace iHeartLinks.AspNetCore.Extensions
 {
     public class WithTemplatedUrlProvider : IUrlProvider
     {
+        private readonly IQueryNameSelector selector;
         private readonly IActionDescriptorCollectionProvider provider;
         private readonly NonTemplatedUrlProvider nonTemplatedUrlProvider;
 
         public WithTemplatedUrlProvider(
+            IQueryNameSelector selector,
             IActionDescriptorCollectionProvider provider,
             IUrlHelperBuilder urlHelperBuilder)
         {
+            this.selector = selector ?? throw new ArgumentNullException(nameof(selector));
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
             nonTemplatedUrlProvider = new NonTemplatedUrlProvider(urlHelperBuilder);
@@ -37,15 +39,13 @@ namespace iHeartLinks.AspNetCore.Extensions
 
             if (RequiresTemplatedUrl(context.LinkRequest))
             {
-                var url = GetTemplate(id);
-                if (string.IsNullOrWhiteSpace(url) ||
-                    // A hack to make a templated url pass the Uri.IsWellFormedUriString() check. Will look for a more elegant solution later.
-                    !Uri.IsWellFormedUriString(Regex.Replace(url, "[{}]", string.Empty), UriKind.RelativeOrAbsolute))
+                var template = GetTemplate(id);
+                if (string.IsNullOrWhiteSpace(template))
                 {
-                    throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL template did not provide a valid value. Value of '{LinkRequest.IdKey}': {id}");
+                    throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL template returned a null or empty value. Value of '{LinkRequest.IdKey}': {id}");
                 }
 
-                return new Uri($"/{url}", UriKind.RelativeOrAbsolute);
+                return new Uri($"/{template}", UriKind.RelativeOrAbsolute);
             }
 
             return nonTemplatedUrlProvider.Provide(context);
@@ -59,7 +59,18 @@ namespace iHeartLinks.AspNetCore.Extensions
                 throw new KeyNotFoundException($"The given '{nameof(id)}' to retrieve the URL template does not exist. Value of '{nameof(id)}': {id}");
             }
 
-            return actionDescriptor.AttributeRouteInfo.Template;
+            var template = actionDescriptor.AttributeRouteInfo.Template;
+            var query = actionDescriptor.Parameters?.FirstOrDefault(x => x.BindingInfo.BindingSource.Id.Equals("query", StringComparison.CurrentCultureIgnoreCase));
+            if (query != null)
+            {
+                var names = selector.Select(query.ParameterType.GetProperties());
+                if (names.Any())
+                {
+                    template = $"{template}{{?{string.Join(',', names)}}}";
+                }
+            }
+
+            return template;
         }
 
         private bool RequiresTemplatedUrl(LinkRequest linkRequest)

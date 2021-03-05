@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
@@ -7,6 +8,7 @@ using iHeartLinks.AspNetCore.UrlProviders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Moq;
 using Xunit;
@@ -19,6 +21,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         private const string TestRouteTemplate = "person/{id}";
         private const string TestRouteUrl = "/person/1";
 
+        private readonly List<ParameterDescriptor> parameters;
+        private readonly Mock<IQueryNameSelector> mockSelector;
         private readonly Mock<IUrlHelper> mockUrlHelper;
         private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
         private readonly Mock<IActionDescriptorCollectionProvider> mockProvider;
@@ -27,6 +31,12 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
         public WithTemplatedUrlProviderTests()
         {
+            parameters = new List<ParameterDescriptor>();
+            mockSelector = new Mock<IQueryNameSelector>();
+            mockSelector
+                .Setup(x => x.Select(It.IsAny<PropertyInfo[]>()))
+                .Returns(new List<string>(new[] { "Filter", "VersionNumber" }));
+
             mockProvider = new Mock<IActionDescriptorCollectionProvider>();
             SetupProvider();
 
@@ -36,13 +46,24 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
                 .Setup(x => x.Build())
                 .Returns(mockUrlHelper.Object);
 
-            sut = new WithTemplatedUrlProvider(mockProvider.Object, mockUrlHelperBuilder.Object);
+            sut = new WithTemplatedUrlProvider(
+                mockSelector.Object,
+                mockProvider.Object, 
+                mockUrlHelperBuilder.Object);
+        }
+
+        [Fact]
+        public void CtorShouldThrowArgumentNullExceptionWhenSelectorIsNull()
+        {
+            Action action = () => new WithTemplatedUrlProvider(default, mockProvider.Object, mockUrlHelperBuilder.Object);
+
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("selector");
         }
 
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenProviderIsNull()
         {
-            Action action = () => new WithTemplatedUrlProvider(default, mockUrlHelperBuilder.Object);
+            Action action = () => new WithTemplatedUrlProvider(mockSelector.Object, default, mockUrlHelperBuilder.Object);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("provider");
         }
@@ -50,7 +71,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperProviderIsNull()
         {
-            Action action = () => new WithTemplatedUrlProvider(mockProvider.Object, default);
+            Action action = () => new WithTemplatedUrlProvider(mockSelector.Object, mockProvider.Object, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
         }
@@ -107,7 +128,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        [InlineData("invalid url format")]
         public void ProvideShouldThrowInvalidOperationExceptionWhenLinkRequestHasTemplatedValueTrueAndUrlTemplateIs(string template)
         {
             var attributeRouteInfo = new AttributeRouteInfo
@@ -128,7 +148,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             Func<Uri> func = () => sut.Provide(context);
 
-            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'id' to retrieve the URL template did not provide a valid value. Value of 'id': {TestRouteName}");
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'id' to retrieve the URL template returned a null or empty value. Value of 'id': {TestRouteName}");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
@@ -148,6 +168,34 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             result.Should().NotBeNull();
             result.ToString().Should().Be($"/{TestRouteTemplate}");
+
+            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
+            mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
+        }
+
+        [Fact]
+        public void ProvideShouldReturnUrlTemplateWithQueryTemplateWhenLinkRequestHasTemplatedValueTrueAndQueryParametersExist()
+        {
+            parameters.Add(new ParameterDescriptor
+            {
+                ParameterType = typeof(object),
+                BindingInfo = new BindingInfo
+                {
+                    BindingSource = new BindingSource("Query", "Query", false, false)
+                }
+            });
+
+            var linkRequest = new LinkRequest(new Dictionary<string, string>
+            {
+                { "id", TestRouteName },
+                { "templated", bool.TrueString.ToLower() }
+            });
+
+            var context = new UrlProviderContext(linkRequest);
+            var result = sut.Provide(context);
+
+            result.Should().NotBeNull();
+            result.ToString().Should().Be($"/{TestRouteTemplate}{{?Filter,VersionNumber}}");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
@@ -386,7 +434,12 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
         private void SetupProvider(AttributeRouteInfo attributeRouteInfo)
         {
-            var actionDescriptor = new ActionDescriptor { AttributeRouteInfo = attributeRouteInfo };
+            var actionDescriptor = new ActionDescriptor 
+            { 
+                AttributeRouteInfo = attributeRouteInfo,
+                Parameters = parameters
+            };
+
             var actionContext = new ActionContext
             {
                 ActionDescriptor = actionDescriptor

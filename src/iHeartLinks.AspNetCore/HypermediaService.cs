@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
@@ -43,7 +44,8 @@ namespace iHeartLinks.AspNetCore
 
         public Link GetLink()
         {
-            return GetLink(urlHelper.Value.ActionContext.ActionDescriptor.AttributeRouteInfo.Name, default);
+            var query = urlHelper.Value.ActionContext.HttpContext.Request.Query?.ToDictionary(x => x.Key, x=> x.Value.ToString());
+            return GetLink(urlHelper.Value.ActionContext.ActionDescriptor.AttributeRouteInfo.Name, query);
         }
 
         public Link GetLink(string request, object args)
