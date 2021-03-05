@@ -20,7 +20,8 @@ namespace iHeartLinks.AspNetCore.Extensions
                 .AddLinkEnricher<HttpMethodEnricher>()
                 .Services
                     .Replace(ServiceDescriptor.Transient<IUrlProvider, WithTemplatedUrlProvider>())
-                    .Replace(ServiceDescriptor.Transient<ILinkFactory, HttpLinkFactory>());
+                    .Replace(ServiceDescriptor.Transient<ILinkFactory, HttpLinkFactory>())
+                    .TryAddTransient<IQueryNameSelector, QueryNameSelector>();
 
             return builder;
         }

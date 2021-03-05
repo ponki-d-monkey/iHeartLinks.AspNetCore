@@ -43,6 +43,13 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             mockServices.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
+                   y.ServiceType == typeof(IQueryNameSelector) &&
+                   y.ImplementationType == typeof(QueryNameSelector) &&
+                   y.Lifetime == ServiceLifetime.Transient)),
+               Times.Once);
+
+            mockServices.Verify(x =>
+               x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IUrlProvider) &&
                    y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
                    y.Lifetime == ServiceLifetime.Transient)),

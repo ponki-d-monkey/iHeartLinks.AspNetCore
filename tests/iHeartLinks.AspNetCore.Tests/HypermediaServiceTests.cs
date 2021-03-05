@@ -7,9 +7,12 @@ using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlProviders;
 using iHeartLinks.Core;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Primitives;
 using Moq;
 using Xunit;
 
@@ -33,9 +36,7 @@ namespace iHeartLinks.AspNetCore.Tests
         public HypermediaServiceTests()
         {
             mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
-            mockUrlHelperBuilder
-                .Setup(x => x.Build())
-                .Returns(CreateUrlHelper);
+            SetupUrlHelperBuilder();
 
             var linkRequest = new LinkRequest(new Dictionary<string, string>
             {
@@ -192,6 +193,66 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
+        public void GetLinkShouldProvideUrlWhenArgsIsNotNull()
+        {
+            var query = new QueryCollection(new Dictionary<string, StringValues>
+            {
+                { "q1", new StringValues("v1") },
+                { "q2", new StringValues(new[] { "v2.1", "v2.2" }) }
+            });
+
+            var mockHttpRequest = new Mock<HttpRequest>();
+            mockHttpRequest
+                .Setup(x => x.Query)
+                .Returns(query);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            mockHttpContext
+                .Setup(x => x.Request)
+                .Returns(mockHttpRequest.Object);
+
+            SetupUrlHelperBuilder(mockHttpContext.Object);
+
+            sut.GetLink();
+
+            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)), Times.Once);
+        }
+
+        [Fact]
+        public void GetLinkShouldPassCorrectKeyValuesToUrlProvider()
+        {
+            var query = new QueryCollection(new Dictionary<string, StringValues>
+            {
+                { "q1", new StringValues("v1") },
+                { "q2", new StringValues(new[] { "v2.1", "v2.2" }) }
+            });
+
+            var mockHttpRequest = new Mock<HttpRequest>();
+            mockHttpRequest
+                .Setup(x => x.Query)
+                .Returns(query);
+
+            var mockHttpContext = new Mock<HttpContext>();
+            mockHttpContext
+                .Setup(x => x.Request)
+                .Returns(mockHttpRequest.Object);
+
+            SetupUrlHelperBuilder(mockHttpContext.Object);
+
+            var expectedQuery = default(Dictionary<string, string>);
+            mockUrlProvider
+                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)))
+                .Returns(new Uri(TestRouteUrl, UriKind.RelativeOrAbsolute))
+                .Callback<UrlProviderContext>(x => expectedQuery = x.Args as Dictionary<string, string>);
+
+            sut.GetLink();
+
+            expectedQuery.Should().NotBeNull();
+            expectedQuery.Should().Contain("q1", "v1");
+            expectedQuery.Should().Contain("q2", "v2.1,v2.2");
+        }
+
+        [Fact]
         public void GetLinkShouldEnrichLinkData()
         {
             sut.GetLink();
@@ -293,7 +354,18 @@ namespace iHeartLinks.AspNetCore.Tests
             mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref() == href)), Times.Once);
         }
 
-        private IUrlHelper CreateUrlHelper()
+        private void SetupUrlHelperBuilder()
+        {
+            var mockHttpRequest = new Mock<HttpRequest>();
+            var mockHttpContext = new Mock<HttpContext>();
+            mockHttpContext
+                .Setup(x => x.Request)
+                .Returns(mockHttpRequest.Object);
+
+            SetupUrlHelperBuilder(mockHttpContext.Object);
+        }
+
+        private void SetupUrlHelperBuilder(HttpContext context)
         {
             var attributeRouteInfo = new AttributeRouteInfo
             {
@@ -307,7 +379,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             var actionContext = new ActionContext
             {
-                ActionDescriptor = actionDescriptor
+                ActionDescriptor = actionDescriptor,
+                HttpContext = context
             };
 
             var mockUrlHelper = new Mock<IUrlHelper>();
@@ -315,7 +388,9 @@ namespace iHeartLinks.AspNetCore.Tests
                 .Setup(x => x.ActionContext)
                 .Returns(actionContext);
 
-            return mockUrlHelper.Object;
+            mockUrlHelperBuilder
+                .Setup(x => x.Build())
+                .Returns(mockUrlHelper.Object);
         }
     }
 }
