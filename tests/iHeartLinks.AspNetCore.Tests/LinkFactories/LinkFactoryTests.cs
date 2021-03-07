@@ -30,8 +30,8 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
             var urlPath = "/person/1";
 
             var context = new LinkFactoryContext();
-            context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
-            context.Set(LinkFactoryContext.UrlPathKey, urlPath);
+            context.SetBaseUrl(new Uri(baseUrl, UriKind.Absolute));
+            context.SetUrlPath(new Uri(urlPath, UriKind.Relative));
 
             var result = sut.Create(context);
             result.Should().NotBeNull();

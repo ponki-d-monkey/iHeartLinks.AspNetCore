@@ -51,7 +51,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockBaseUrlProvider = new Mock<IBaseUrlProvider>();
             mockBaseUrlProvider
                 .Setup(x => x.Provide())
-                .Returns(TestBaseUrl);
+                .Returns(new Uri(TestBaseUrl, UriKind.Absolute));
 
             mockUrlPathProvider = new Mock<IUrlPathProvider>();
             mockUrlPathProvider
@@ -266,7 +266,7 @@ namespace iHeartLinks.AspNetCore.Tests
             var href = $"{TestBaseUrl}{TestRouteUrl}";
             var result = sut.GetLink();
 
-            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref() == href)), Times.Once);
+            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref().ToString() == href)), Times.Once);
         }
 
         [Theory]
@@ -297,7 +297,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             mockBaseUrlProvider
                 .Setup(x => x.Provide())
-                .Returns(default(string));
+                .Returns(default(Uri));
 
             Func<Link> func = () => sut.GetLink(TestRouteName, args);
 
@@ -351,7 +351,7 @@ namespace iHeartLinks.AspNetCore.Tests
             var href = $"{TestBaseUrl}{TestRouteUrl}";
             var result = sut.GetLink(TestRouteName, args);
 
-            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref() == href)), Times.Once);
+            mockLinkFactory.Verify(x => x.Create(It.Is<LinkFactoryContext>(x => x.GetHref().ToString() == href)), Times.Once);
         }
 
         private void SetupUrlHelperBuilder()

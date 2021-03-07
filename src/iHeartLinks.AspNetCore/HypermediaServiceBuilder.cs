@@ -32,8 +32,7 @@ namespace iHeartLinks.AspNetCore
 
         public HypermediaServiceBuilder UseCustomBaseUrlHref(string baseUrl)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl) ||
-                !Uri.IsWellFormedUriString(baseUrl, UriKind.RelativeOrAbsolute))
+            if (string.IsNullOrWhiteSpace(baseUrl) || !Uri.IsWellFormedUriString(baseUrl, UriKind.Absolute))
             {
                 throw new ArgumentException($"Parameter '{nameof(baseUrl)}' must not be null or empty and must be a valid URL.");
             }

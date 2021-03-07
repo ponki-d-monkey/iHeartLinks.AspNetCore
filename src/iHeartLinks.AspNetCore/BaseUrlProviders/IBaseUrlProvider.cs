@@ -1,7 +1,9 @@
-﻿namespace iHeartLinks.AspNetCore.BaseUrlProviders
+﻿using System;
+
+namespace iHeartLinks.AspNetCore.BaseUrlProviders
 {
     public interface IBaseUrlProvider
     {
-        string Provide();
+        Uri Provide();
     }
 }

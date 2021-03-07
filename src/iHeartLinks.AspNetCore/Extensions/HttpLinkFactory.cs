@@ -8,7 +8,7 @@ namespace iHeartLinks.AspNetCore.Extensions
         protected override Link DoCreate(LinkFactoryContext context)
         {
             return context
-                .MapTo((h, c) => new HttpLink(h, c.Get(HttpMethodEnricher.HttpMethodKey).ToString()))
+                .MapTo((h, c) => new HttpLink(h.ToString(), c.Get(HttpMethodEnricher.HttpMethodKey).ToString()))
                 .MapIfExisting<bool>(IsTemplatedEnricher.TemplatedKey, (l, v) =>
                 {
                     if (v)

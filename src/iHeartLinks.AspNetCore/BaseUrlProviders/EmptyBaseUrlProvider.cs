@@ -1,10 +1,12 @@
-﻿namespace iHeartLinks.AspNetCore.BaseUrlProviders
+﻿using System;
+
+namespace iHeartLinks.AspNetCore.BaseUrlProviders
 {
     public sealed class EmptyBaseUrlProvider : IBaseUrlProvider
     {
-        public string Provide()
+        public Uri Provide()
         {
-            return string.Empty;
+            return new Uri("", UriKind.Relative);
         }
     }
 }

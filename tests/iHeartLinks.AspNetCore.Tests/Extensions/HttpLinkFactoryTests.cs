@@ -31,8 +31,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var urlPath = "/person/1";
 
             var context = new LinkFactoryContext();
-            context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
-            context.Set(LinkFactoryContext.UrlPathKey, urlPath);
+            context.SetBaseUrl(new Uri(baseUrl, UriKind.Absolute));
+            context.SetUrlPath(new Uri(urlPath, UriKind.Relative));
             context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
             context.Set(IsTemplatedEnricher.TemplatedKey, true);
 
@@ -55,8 +55,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var urlPath = "/person/1";
 
             var context = new LinkFactoryContext();
-            context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
-            context.Set(LinkFactoryContext.UrlPathKey, urlPath);
+            context.SetBaseUrl(new Uri(baseUrl, UriKind.Absolute));
+            context.SetUrlPath(new Uri(urlPath, UriKind.Relative));
             context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
 
             var result = sut.Create(context);
@@ -71,8 +71,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             var urlPath = "/person/1";
 
             var context = new LinkFactoryContext();
-            context.Set(LinkFactoryContext.BaseUrlKey, baseUrl);
-            context.Set(LinkFactoryContext.UrlPathKey, urlPath);
+            context.SetBaseUrl(new Uri(baseUrl, UriKind.Absolute));
+            context.SetUrlPath(new Uri(urlPath, UriKind.Relative));
             context.Set(HttpMethodEnricher.HttpMethodKey, "GET");
             context.Set(IsTemplatedEnricher.TemplatedKey, false);
 

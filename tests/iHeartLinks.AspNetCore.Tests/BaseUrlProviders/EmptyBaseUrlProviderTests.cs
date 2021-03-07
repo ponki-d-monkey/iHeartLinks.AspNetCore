@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using Xunit;
 
@@ -18,7 +19,10 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         {
             var result = sut.Provide();
 
-            result.Should().BeEmpty();
+            result.Should().NotBeNull();
+
+            var uri = result.As<Uri>();
+            uri.OriginalString.Should().BeEmpty();
         }
     }
 }

@@ -152,7 +152,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockServices.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IBaseUrlProvider) &&
-                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide() == TestCustomBaseUrl &&
+                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide().OriginalString == TestCustomBaseUrl &&
                    y.Lifetime == ServiceLifetime.Transient)),
                Times.Never);
         }
@@ -167,7 +167,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockServices.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IBaseUrlProvider) &&
-                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide() == TestCustomBaseUrl &&
+                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide().OriginalString == TestCustomBaseUrl &&
                    y.Lifetime == ServiceLifetime.Transient)),
                Times.Once);
         }
@@ -191,7 +191,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockServices.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IBaseUrlProvider) &&
-                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide() == TestCustomBaseUrl &&
+                   (y.ImplementationFactory.Invoke(null) as CustomBaseUrlProvider).Provide().OriginalString == TestCustomBaseUrl &&
                    y.Lifetime == ServiceLifetime.Transient)),
                Times.Once);
         }

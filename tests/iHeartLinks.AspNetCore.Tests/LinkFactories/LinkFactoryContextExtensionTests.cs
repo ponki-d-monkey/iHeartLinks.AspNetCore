@@ -21,7 +21,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetBaseUrlShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<string> func = () => default(LinkFactoryContext).GetBaseUrl();
+            Func<Uri> func = () => default(LinkFactoryContext).GetBaseUrl();
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -29,7 +29,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetBaseUrlShouldReturnBaseUrl()
         {
-            sut.Set(LinkFactoryContext.BaseUrlKey, TestBaseUrl);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
 
             var result = sut.GetBaseUrl();
             result.Should().Be(TestBaseUrl);
@@ -45,7 +45,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetUrlPathShoulThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<string> func = () => default(LinkFactoryContext).GetUrlPath();
+            Func<Uri> func = () => default(LinkFactoryContext).GetUrlPath();
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -53,7 +53,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetUrlPathShouldReturnUrlPath()
         {
-            sut.Set(LinkFactoryContext.UrlPathKey, TestUrlPath);
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             var result = sut.GetUrlPath();
             result.Should().Be(TestUrlPath);
@@ -69,7 +69,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetHrefShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<string> func = () => default(LinkFactoryContext).GetHref();
+            Func<Uri> func = () => default(LinkFactoryContext).GetHref();
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -77,8 +77,8 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetHrefShouldReturnHref()
         {
-            sut.Set(LinkFactoryContext.BaseUrlKey, TestBaseUrl);
-            sut.Set(LinkFactoryContext.UrlPathKey, TestUrlPath);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             var result = sut.GetHref();
             result.Should().Be($"{TestBaseUrl}{TestUrlPath}");
@@ -87,7 +87,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetHrefShouldReturnHrefWhenBaseUrlDoesNotExist()
         {
-            sut.Set(LinkFactoryContext.UrlPathKey, TestUrlPath);
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             var result = sut.GetHref();
             result.Should().Be(TestUrlPath);
@@ -96,7 +96,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void GetHrefShouldReturnHrefWhenUrlPathDoesNotExist()
         {
-            sut.Set(LinkFactoryContext.BaseUrlKey, TestBaseUrl);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
 
             var result = sut.GetHref();
             result.Should().Be(TestBaseUrl);
@@ -112,7 +112,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetBaseUrlShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<LinkFactoryContext> func = () => default(LinkFactoryContext).SetBaseUrl(TestBaseUrl);
+            Func<LinkFactoryContext> func = () => default(LinkFactoryContext).SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -128,7 +128,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetBaseUrlShouldAddBaseUrl()
         {
-            sut.SetBaseUrl(TestBaseUrl);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
 
             var result = sut.GetBaseUrl();
             result.Should().Be(TestBaseUrl);
@@ -137,7 +137,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetBaseUrlShouldReturnSameInstanceOfContext()
         {
-            var result = sut.SetBaseUrl(TestBaseUrl);
+            var result = sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
 
             result.Should().Be(sut);
         }
@@ -145,7 +145,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetUrlPathShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<LinkFactoryContext> func = () => default(LinkFactoryContext).SetUrlPath(TestUrlPath);
+            Func<LinkFactoryContext> func = () => default(LinkFactoryContext).SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -161,7 +161,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetUrlPathShouldAddUrlPath()
         {
-            sut.SetUrlPath(TestUrlPath);
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             var result = sut.GetUrlPath();
             result.Should().Be(TestUrlPath);
@@ -170,7 +170,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void SetUrlPathShouldReturnSameInstanceOfContext()
         {
-            var result = sut.SetUrlPath(TestUrlPath);
+            var result = sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
             result.Should().Be(sut);
         }
@@ -178,7 +178,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<LinkMapper<Link>> func = () => default(LinkFactoryContext).MapTo(h => new Link(h));
+            Func<LinkMapper<Link>> func = () => default(LinkFactoryContext).MapTo(h => new Link(h.ToString()));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -186,7 +186,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToShouldThrowArgumentNullExceptionWhenCreateHandlerIsNull()
         {
-            Func<LinkMapper<Link>> func = () => sut.MapTo(default(Func<string, Link>));
+            Func<LinkMapper<Link>> func = () => sut.MapTo(default(Func<Uri, Link>));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("createHandler");
         }
@@ -194,10 +194,10 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToShouldReturnLinkMapper()
         {
-            sut.Set(LinkFactoryContext.BaseUrlKey, TestBaseUrl);
-            sut.Set(LinkFactoryContext.UrlPathKey, TestUrlPath);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
-            var result = sut.MapTo(h => new Link(h));
+            var result = sut.MapTo(h => new Link(h.ToString()));
 
             result.Should().NotBeNull();
             result.Context.Should().NotBeNull();
@@ -209,7 +209,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToWithContextShouldThrowArgumentNullExceptionWhenContextIsNull()
         {
-            Func<LinkMapper<Link>> func = () => default(LinkFactoryContext).MapTo((h, c) => new Link(h));
+            Func<LinkMapper<Link>> func = () => default(LinkFactoryContext).MapTo((h, c) => new Link(h.ToString()));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
         }
@@ -217,7 +217,7 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToWithContextShouldThrowArgumentNullExceptionWhenCreateHandlerIsNull()
         {
-            Func<LinkMapper<Link>> func = () => sut.MapTo(default(Func<string, LinkFactoryContext, Link>));
+            Func<LinkMapper<Link>> func = () => sut.MapTo(default(Func<Uri, LinkFactoryContext, Link>));
 
             func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("createHandler");
         }
@@ -225,10 +225,10 @@ namespace iHeartLinks.AspNetCore.Tests.LinkFactories
         [Fact]
         public void MapToWithContextShouldReturnLinkMapper()
         {
-            sut.Set(LinkFactoryContext.BaseUrlKey, TestBaseUrl);
-            sut.Set(LinkFactoryContext.UrlPathKey, TestUrlPath);
+            sut.SetBaseUrl(new Uri(TestBaseUrl, UriKind.Absolute));
+            sut.SetUrlPath(new Uri(TestUrlPath, UriKind.Relative));
 
-            var result = sut.MapTo((h, c) => new Link(h));
+            var result = sut.MapTo((h, c) => new Link(h.ToString()));
 
             result.Should().NotBeNull();
             result.Context.Should().NotBeNull();
