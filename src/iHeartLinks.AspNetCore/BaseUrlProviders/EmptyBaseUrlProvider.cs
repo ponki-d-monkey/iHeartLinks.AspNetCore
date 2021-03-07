@@ -6,7 +6,7 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
     {
         public Uri Provide()
         {
-            return new Uri("", UriKind.Relative);
+            return new Uri(string.Empty, UriKind.Relative);
         }
     }
 }
