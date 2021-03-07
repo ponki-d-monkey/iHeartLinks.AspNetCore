@@ -5,7 +5,7 @@ using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -50,8 +50,8 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             mockServices.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
-                   y.ServiceType == typeof(IUrlProvider) &&
-                   y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
+                   y.ServiceType == typeof(IUrlPathProvider) &&
+                   y.ImplementationType == typeof(WithTemplatedUrlPathProvider) &&
                    y.Lifetime == ServiceLifetime.Transient)),
                Times.Once);
 

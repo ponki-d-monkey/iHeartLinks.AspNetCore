@@ -1,11 +1,11 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 
-namespace iHeartLinks.AspNetCore.UrlProviders
+namespace iHeartLinks.AspNetCore.UrlPathProviders
 {
-    public sealed class UrlProviderContext
+    public sealed class UrlPathProviderContext
     {
-        public UrlProviderContext(LinkRequest linkRequest)
+        public UrlPathProviderContext(LinkRequest linkRequest)
         {
             LinkRequest = linkRequest ?? throw new ArgumentNullException(nameof(linkRequest));
         }

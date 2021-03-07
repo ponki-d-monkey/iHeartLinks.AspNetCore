@@ -12,11 +12,11 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
             this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public string Provide()
+        public Uri Provide()
         {
             var request = httpContextAccessor.HttpContext.Request;
 
-            return $"{request.Scheme}://{request.Host.ToUriComponent()}";
+            return new Uri($"{request.Scheme}://{request.Host.ToUriComponent()}", UriKind.Absolute);
         }
     }
 }

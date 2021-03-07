@@ -1,7 +1,4 @@
 ﻿using System;
-using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.UrlProviders;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace iHeartLinks.AspNetCore.Extensions
@@ -16,12 +13,11 @@ namespace iHeartLinks.AspNetCore.Extensions
             }
 
             builder
-                .AddLinkEnricher<IsTemplatedEnricher>()
-                .AddLinkEnricher<HttpMethodEnricher>()
-                .Services
-                    .Replace(ServiceDescriptor.Transient<IUrlProvider, WithTemplatedUrlProvider>())
-                    .Replace(ServiceDescriptor.Transient<ILinkFactory, HttpLinkFactory>())
-                    .TryAddTransient<IQueryNameSelector, QueryNameSelector>();
+                .AddLinkDataEnricher<IsTemplatedEnricher>()
+                .AddLinkDataEnricher<HttpMethodEnricher>()
+                .UseUrlPathProvider<WithTemplatedUrlPathProvider>()
+                .UseLinkFactory<HttpLinkFactory>()
+                .Services.TryAddTransient<IQueryNameSelector, QueryNameSelector>();
 
             return builder;
         }

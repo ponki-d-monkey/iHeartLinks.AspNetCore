@@ -2,13 +2,13 @@
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using Microsoft.AspNetCore.Mvc;
 
-namespace iHeartLinks.AspNetCore.UrlProviders
+namespace iHeartLinks.AspNetCore.UrlPathProviders
 {
-    public sealed class NonTemplatedUrlProvider : IUrlProvider
+    public sealed class NonTemplatedUrlPathProvider : IUrlPathProvider
     {
         private readonly Lazy<IUrlHelper> urlHelper;
 
-        public NonTemplatedUrlProvider(IUrlHelperBuilder urlHelperBuilder)
+        public NonTemplatedUrlPathProvider(IUrlHelperBuilder urlHelperBuilder)
         {
             if (urlHelperBuilder == null)
             {
@@ -18,7 +18,7 @@ namespace iHeartLinks.AspNetCore.UrlProviders
             urlHelper = new Lazy<IUrlHelper>(() => urlHelperBuilder.Build());
         }
 
-        public Uri Provide(UrlProviderContext context)
+        public Uri Provide(UrlPathProviderContext context)
         {
             if (context == null)
             {

@@ -17,7 +17,7 @@ namespace iHeartLinks.AspNetCore.LinkFactories
 
         protected virtual Link DoCreate(LinkFactoryContext context)
         {
-            return context.MapTo(h => new Link(h)).Link;
+            return context.MapTo(h => new Link(h.ToString())).Link;
         }
     }
 }

@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Moq;
 using Xunit;
 
-namespace iHeartLinks.AspNetCore.Tests.UrlProviders
+namespace iHeartLinks.AspNetCore.Tests.UrlPathProviders
 {
-    public sealed class NonTemplatedUrlProviderTests
+    public sealed class NonTemplatedUrlPathProviderTests
     {
         private const string TestRouteName = "TestRouteName";
         private const string TestRouteUrl = "/person/1";
@@ -18,9 +18,9 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
         private readonly Mock<IUrlHelper> mockUrlHelper;
         private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
 
-        private readonly NonTemplatedUrlProvider sut;
+        private readonly NonTemplatedUrlPathProvider sut;
 
-        public NonTemplatedUrlProviderTests()
+        public NonTemplatedUrlPathProviderTests()
         {
             mockUrlHelper = new Mock<IUrlHelper>();
             mockUrlHelperBuilder = new Mock<IUrlHelperBuilder>();
@@ -28,13 +28,13 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 .Setup(x => x.Build())
                 .Returns(mockUrlHelper.Object);
 
-            sut = new NonTemplatedUrlProvider(mockUrlHelperBuilder.Object);
+            sut = new NonTemplatedUrlPathProvider(mockUrlHelperBuilder.Object);
         }
 
         [Fact]
         public void CtorShouldThrowArgumentNullExceptionWhenUrlHelperBuilderIsNull()
         {
-            Action action = () => new NonTemplatedUrlProvider(default);
+            Action action = () => new NonTemplatedUrlPathProvider(default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlHelperBuilder");
         }
@@ -58,7 +58,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 { "templated", "true" }
             });
 
-            var context = new UrlProviderContext(linkRequest);
+            var context = new UrlPathProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -84,7 +84,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkRequest);
+            var context = new UrlPathProviderContext(linkRequest);
 
             Func<Uri> func = () => sut.Provide(context);
 
@@ -106,7 +106,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkRequest);
+            var context = new UrlPathProviderContext(linkRequest);
             var result = sut.Provide(context);
 
             result.Should().NotBeNull();
@@ -132,7 +132,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkRequest)
+            var context = new UrlPathProviderContext(linkRequest)
             {
                 Args = new object()
             };
@@ -157,7 +157,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlProviders
                 { "id", TestRouteName }
             });
 
-            var context = new UrlProviderContext(linkRequest)
+            var context = new UrlPathProviderContext(linkRequest)
             {
                 Args = new object()
             };

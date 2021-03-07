@@ -5,27 +5,27 @@ namespace iHeartLinks.AspNetCore.LinkFactories
 {
     public static class LinkFactoryContextExtension
     {
-        public static string GetBaseUrl(this LinkFactoryContext context)
+        public static Uri GetBaseUrl(this LinkFactoryContext context)
         {
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            return context.Get(LinkFactoryContext.BaseUrlKey)?.ToString();
+            return context.Get(LinkFactoryContext.BaseUrlKey) as Uri;
         }
 
-        public static string GetUrlPath(this LinkFactoryContext context)
+        public static Uri GetUrlPath(this LinkFactoryContext context)
         {
             if (context == null)
             {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            return context.Get(LinkFactoryContext.UrlPathKey)?.ToString();
+            return context.Get(LinkFactoryContext.UrlPathKey) as Uri;
         }
 
-        public static string GetHref(this LinkFactoryContext context)
+        public static Uri GetHref(this LinkFactoryContext context)
         {
             if (context == null)
             {
@@ -40,10 +40,22 @@ namespace iHeartLinks.AspNetCore.LinkFactories
                 return null;
             }
 
-            return $"{baseUrl}{urlPath}";
+            if (baseUrl == null)
+            {
+                return urlPath;
+            }
+
+            if (urlPath == null)
+            {
+                return baseUrl;
+            }
+
+            Uri.TryCreate(baseUrl, urlPath, out Uri absoluteUrl);
+
+            return absoluteUrl;
         }
 
-        public static LinkFactoryContext SetBaseUrl(this LinkFactoryContext context, object value)
+        public static LinkFactoryContext SetBaseUrl(this LinkFactoryContext context, Uri value)
         {
             if (context == null)
             {
@@ -60,7 +72,7 @@ namespace iHeartLinks.AspNetCore.LinkFactories
             return context;
         }
 
-        public static LinkFactoryContext SetUrlPath(this LinkFactoryContext context, object value)
+        public static LinkFactoryContext SetUrlPath(this LinkFactoryContext context, Uri value)
         {
             if (context == null)
             {
@@ -77,7 +89,7 @@ namespace iHeartLinks.AspNetCore.LinkFactories
             return context;
         }
 
-        public static LinkMapper<TLink> MapTo<TLink>(this LinkFactoryContext context, Func<string, TLink> createHandler)
+        public static LinkMapper<TLink> MapTo<TLink>(this LinkFactoryContext context, Func<Uri, TLink> createHandler)
             where TLink : Link
         {
             if (context == null)
@@ -95,7 +107,7 @@ namespace iHeartLinks.AspNetCore.LinkFactories
             return new LinkMapper<TLink>(context, link);
         }
 
-        public static LinkMapper<TLink> MapTo<TLink>(this LinkFactoryContext context, Func<string, LinkFactoryContext, TLink> createHandler)
+        public static LinkMapper<TLink> MapTo<TLink>(this LinkFactoryContext context, Func<Uri, LinkFactoryContext, TLink> createHandler)
             where TLink : Link
         {
             if (context == null)

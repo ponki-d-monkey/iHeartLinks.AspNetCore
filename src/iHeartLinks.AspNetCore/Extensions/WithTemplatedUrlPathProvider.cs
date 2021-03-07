@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace iHeartLinks.AspNetCore.Extensions
 {
-    public class WithTemplatedUrlProvider : IUrlProvider
+    public class WithTemplatedUrlPathProvider : IUrlPathProvider
     {
         private readonly IQueryNameSelector selector;
         private readonly IActionDescriptorCollectionProvider provider;
-        private readonly NonTemplatedUrlProvider nonTemplatedUrlProvider;
+        private readonly NonTemplatedUrlPathProvider nonTemplatedUrlPathProvider;
 
-        public WithTemplatedUrlProvider(
+        public WithTemplatedUrlPathProvider(
             IQueryNameSelector selector,
             IActionDescriptorCollectionProvider provider,
             IUrlHelperBuilder urlHelperBuilder)
@@ -21,10 +21,10 @@ namespace iHeartLinks.AspNetCore.Extensions
             this.selector = selector ?? throw new ArgumentNullException(nameof(selector));
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
-            nonTemplatedUrlProvider = new NonTemplatedUrlProvider(urlHelperBuilder);
+            nonTemplatedUrlPathProvider = new NonTemplatedUrlPathProvider(urlHelperBuilder);
         }
 
-        public Uri Provide(UrlProviderContext context)
+        public Uri Provide(UrlPathProviderContext context)
         {
             if (context == null)
             {
@@ -48,7 +48,7 @@ namespace iHeartLinks.AspNetCore.Extensions
                 return new Uri($"/{template}", UriKind.RelativeOrAbsolute);
             }
 
-            return nonTemplatedUrlProvider.Provide(context);
+            return nonTemplatedUrlPathProvider.Provide(context);
         }
 
         protected virtual string GetTemplate(string id)
