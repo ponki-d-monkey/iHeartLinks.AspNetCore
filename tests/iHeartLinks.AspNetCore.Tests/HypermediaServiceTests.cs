@@ -5,7 +5,7 @@ using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
@@ -27,7 +27,7 @@ namespace iHeartLinks.AspNetCore.Tests
         private readonly Mock<IUrlHelperBuilder> mockUrlHelperBuilder;
         private readonly Mock<ILinkRequestProcessor> mockLinkRequestProcessor;
         private readonly Mock<IBaseUrlProvider> mockBaseUrlProvider;
-        private readonly Mock<IUrlProvider> mockUrlProvider;
+        private readonly Mock<IUrlPathProvider> mockUrlPathProvider;
         private readonly Mock<ILinkDataEnricher> mockLinkDataEnricher;
         private readonly Mock<ILinkFactory> mockLinkFactory;
 
@@ -53,9 +53,9 @@ namespace iHeartLinks.AspNetCore.Tests
                 .Setup(x => x.Provide())
                 .Returns(TestBaseUrl);
 
-            mockUrlProvider = new Mock<IUrlProvider>();
-            mockUrlProvider
-                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
+            mockUrlPathProvider = new Mock<IUrlPathProvider>();
+            mockUrlPathProvider
+                .Setup(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
                 .Returns(new Uri(TestRouteUrl, UriKind.RelativeOrAbsolute));
 
             mockLinkDataEnricher = new Mock<ILinkDataEnricher>();
@@ -65,7 +65,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 mockUrlHelperBuilder.Object,
                 mockLinkRequestProcessor.Object,
                 mockBaseUrlProvider.Object,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 mockLinkFactory.Object);
         }
@@ -83,7 +83,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 default,
                 mockLinkRequestProcessor.Object,
                 mockBaseUrlProvider.Object,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 mockLinkFactory.Object);
 
@@ -97,7 +97,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 mockUrlHelperBuilder.Object,
                 default,
                 mockBaseUrlProvider.Object,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 mockLinkFactory.Object);
 
@@ -111,7 +111,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 mockUrlHelperBuilder.Object,
                 mockLinkRequestProcessor.Object,
                 default,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 mockLinkFactory.Object);
 
@@ -129,7 +129,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 mockLinkFactory.Object);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlProvider");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("urlPathProvider");
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 mockUrlHelperBuilder.Object,
                 mockLinkRequestProcessor.Object,
                 mockBaseUrlProvider.Object,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 default,
                 mockLinkFactory.Object);
 
@@ -153,7 +153,7 @@ namespace iHeartLinks.AspNetCore.Tests
                 mockUrlHelperBuilder.Object,
                 mockLinkRequestProcessor.Object,
                 mockBaseUrlProvider.Object,
-                mockUrlProvider.Object,
+                mockUrlPathProvider.Object,
                 new List<ILinkDataEnricher> { mockLinkDataEnricher.Object },
                 default);
 
@@ -189,7 +189,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.GetLink();
 
-            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == null)), Times.Once);
+            mockUrlPathProvider.Verify(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == null)), Times.Once);
         }
 
         [Fact]
@@ -215,7 +215,7 @@ namespace iHeartLinks.AspNetCore.Tests
 
             sut.GetLink();
 
-            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)), Times.Once);
+            mockUrlPathProvider.Verify(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)), Times.Once);
         }
 
         [Fact]
@@ -240,10 +240,10 @@ namespace iHeartLinks.AspNetCore.Tests
             SetupUrlHelperBuilder(mockHttpContext.Object);
 
             var expectedQuery = default(Dictionary<string, string>);
-            mockUrlProvider
-                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)))
+            mockUrlPathProvider
+                .Setup(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args is Dictionary<string, string>)))
                 .Returns(new Uri(TestRouteUrl, UriKind.RelativeOrAbsolute))
-                .Callback<UrlProviderContext>(x => expectedQuery = x.Args as Dictionary<string, string>);
+                .Callback<UrlPathProviderContext>(x => expectedQuery = x.Args as Dictionary<string, string>);
 
             sut.GetLink();
 
@@ -301,7 +301,7 @@ namespace iHeartLinks.AspNetCore.Tests
 
             Func<Link> func = () => sut.GetLink(TestRouteName, args);
 
-            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The base URL provider returned a null value. Base URL is required in order to proceed.");
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The base URL provider must not return a null value.");
         }
 
         [Theory]
@@ -317,13 +317,13 @@ namespace iHeartLinks.AspNetCore.Tests
         [MemberData(nameof(TestArgs))]
         public void GetLinkParametersShouldThrowInvalidOperationExceptionWhenUrlPathIsNull(object args)
         {
-            mockUrlProvider
-                .Setup(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
+            mockUrlPathProvider
+                .Setup(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName)))
                 .Returns(default(Uri));
 
             Func<Link> func = () => sut.GetLink(TestRouteName, args);
 
-            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The URL provider returned a null value. URL path is required in order to proceed.");
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be("The URL path provider must not return a null value.");
         }
 
         [Theory]
@@ -332,7 +332,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.GetLink(TestRouteName, args);
 
-            mockUrlProvider.Verify(x => x.Provide(It.Is<UrlProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == args)), Times.Once);
+            mockUrlPathProvider.Verify(x => x.Provide(It.Is<UrlPathProviderContext>(x => x.LinkRequest.Id == TestRouteName && x.Args == args)), Times.Once);
         }
 
         [Theory]

@@ -1,6 +1,6 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -19,7 +19,7 @@ namespace iHeartLinks.AspNetCore.Extensions
                 .AddLinkEnricher<IsTemplatedEnricher>()
                 .AddLinkEnricher<HttpMethodEnricher>()
                 .Services
-                    .Replace(ServiceDescriptor.Transient<IUrlProvider, WithTemplatedUrlProvider>())
+                    .Replace(ServiceDescriptor.Transient<IUrlPathProvider, WithTemplatedUrlPathProvider>())
                     .Replace(ServiceDescriptor.Transient<ILinkFactory, HttpLinkFactory>())
                     .TryAddTransient<IQueryNameSelector, QueryNameSelector>();
 

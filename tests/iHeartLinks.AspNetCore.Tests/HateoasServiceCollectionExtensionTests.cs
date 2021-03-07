@@ -6,7 +6,7 @@ using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -73,8 +73,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -133,8 +133,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
@@ -203,8 +203,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -265,8 +265,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -325,8 +325,8 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
@@ -396,15 +396,15 @@ namespace iHeartLinks.AspNetCore.Tests
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(NonTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(NonTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 
             mockSut.Verify(x =>
                 x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(IUrlProvider) &&
-                    y.ImplementationType == typeof(WithTemplatedUrlProvider) &&
+                    y.ServiceType == typeof(IUrlPathProvider) &&
+                    y.ImplementationType == typeof(WithTemplatedUrlPathProvider) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 

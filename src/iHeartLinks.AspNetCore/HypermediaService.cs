@@ -5,7 +5,7 @@ using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
-using iHeartLinks.AspNetCore.UrlProviders;
+using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +16,7 @@ namespace iHeartLinks.AspNetCore
         private readonly Lazy<IUrlHelper> urlHelper;
         private readonly ILinkRequestProcessor linkRequestProcessor;
         private readonly IBaseUrlProvider baseUrlProvider;
-        private readonly IUrlProvider urlProvider;
+        private readonly IUrlPathProvider urlPathProvider;
         private readonly IEnumerable<ILinkDataEnricher> linkDataEnrichers;
         private readonly ILinkFactory linkFactory;
 
@@ -24,7 +24,7 @@ namespace iHeartLinks.AspNetCore
             IUrlHelperBuilder urlHelperBuilder,
             ILinkRequestProcessor linkRequestProcessor,
             IBaseUrlProvider baseUrlProvider,
-            IUrlProvider urlProvider,
+            IUrlPathProvider urlPathProvider,
             IEnumerable<ILinkDataEnricher> linkDataEnrichers,
             ILinkFactory linkFactory)
         {
@@ -37,7 +37,7 @@ namespace iHeartLinks.AspNetCore
 
             this.linkRequestProcessor = linkRequestProcessor ?? throw new ArgumentNullException(nameof(linkRequestProcessor));
             this.baseUrlProvider = baseUrlProvider ?? throw new ArgumentNullException(nameof(baseUrlProvider));
-            this.urlProvider = urlProvider ?? throw new ArgumentNullException(nameof(urlProvider));
+            this.urlPathProvider = urlPathProvider ?? throw new ArgumentNullException(nameof(urlPathProvider));
             this.linkDataEnrichers = linkDataEnrichers ?? throw new ArgumentNullException(nameof(linkDataEnrichers));
             this.linkFactory = linkFactory ?? throw new ArgumentNullException(nameof(linkFactory));
         }
@@ -58,18 +58,18 @@ namespace iHeartLinks.AspNetCore
             var baseUrl = baseUrlProvider.Provide();
             if (baseUrl == null)
             {
-                throw new InvalidOperationException("The base URL provider returned a null value. Base URL is required in order to proceed.");
+                throw new InvalidOperationException("The base URL provider must not return a null value.");
             }
 
             var linkRequest = linkRequestProcessor.Process(request);
-            var urlPath = urlProvider.Provide(new UrlProviderContext(linkRequest)
+            var urlPath = urlPathProvider.Provide(new UrlPathProviderContext(linkRequest)
             {
                 Args = args
             });
 
             if (urlPath == null)
             {
-                throw new InvalidOperationException("The URL provider returned a null value. URL path is required in order to proceed.");
+                throw new InvalidOperationException("The URL path provider must not return a null value.");
             }
 
             var linkFactoryContext = new LinkFactoryContext()
