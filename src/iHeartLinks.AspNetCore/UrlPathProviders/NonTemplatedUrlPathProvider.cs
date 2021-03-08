@@ -35,8 +35,7 @@ namespace iHeartLinks.AspNetCore.UrlPathProviders
                 urlHelper.Value.RouteUrl(id) : 
                 urlHelper.Value.RouteUrl(id, context.Args);
 
-            if (string.IsNullOrWhiteSpace(url) ||
-                !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
+            if (string.IsNullOrWhiteSpace(url) || !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
             {
                 throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL did not provide a valid value. Value of '{LinkRequest.IdKey}': {id}");
             }

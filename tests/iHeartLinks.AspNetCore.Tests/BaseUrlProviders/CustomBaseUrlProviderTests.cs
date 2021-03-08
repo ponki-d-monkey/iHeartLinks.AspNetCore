@@ -17,7 +17,7 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
             Action action = () => new CustomBaseUrlProvider(baseUrl);
 
             var exception = action.Should().Throw<ArgumentException>().Which;
-            exception.Message.Should().Be("Parameter 'baseUrl' must not be null or empty and must be a valid URL.");
+            exception.Message.Should().Be("Parameter 'baseUrl' must not be null or empty and must be a valid base URL.");
             exception.ParamName.Should().BeNull();
         }
 
