@@ -10,7 +10,7 @@ namespace iHeartLinks.AspNetCore.BaseUrlProviders
         {
             if (string.IsNullOrWhiteSpace(baseUrl) || !Uri.TryCreate(baseUrl, UriKind.Absolute, out this.baseUrl))
             {
-                throw new ArgumentException($"Parameter '{nameof(baseUrl)}' must not be null or empty and must be a valid URL.");
+                throw new ArgumentException($"Parameter '{nameof(baseUrl)}' must not be null or empty and must be a valid base URL.");
             }
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace iHeartLinks.AspNetCore.Extensions
@@ -45,7 +46,7 @@ namespace iHeartLinks.AspNetCore.Extensions
                     throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL template returned a null or empty value. Value of '{LinkRequest.IdKey}': {id}");
                 }
 
-                return new Uri($"/{template}", UriKind.RelativeOrAbsolute);
+                return new Uri($"/{template}", UriKind.Relative);
             }
 
             return nonTemplatedUrlPathProvider.Provide(context);
@@ -56,21 +57,34 @@ namespace iHeartLinks.AspNetCore.Extensions
             var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == id);
             if (actionDescriptor == null)
             {
-                throw new KeyNotFoundException($"The given '{nameof(id)}' to retrieve the URL template does not exist. Value of '{nameof(id)}': {id}");
+                throw new KeyNotFoundException($"The given '{LinkRequest.IdKey}' to retrieve the URL template does not exist. Value of '{LinkRequest.IdKey}': {id}");
             }
 
             var template = actionDescriptor.AttributeRouteInfo.Template;
-            var query = actionDescriptor.Parameters?.FirstOrDefault(x => x.BindingInfo.BindingSource.Id.Equals("query", StringComparison.CurrentCultureIgnoreCase));
-            if (query != null)
+            var queryTemplate = GetQueryTemplate(actionDescriptor);
+            if (!string.IsNullOrWhiteSpace(queryTemplate))
             {
-                var names = selector.Select(query.ParameterType.GetProperties());
-                if (names.Any())
-                {
-                    template = $"{template}{{?{string.Join(',', names)}}}";
-                }
+                template = $"{template}{queryTemplate}";
             }
 
             return template;
+        }
+
+        private string GetQueryTemplate(ActionDescriptor actionDescriptor)
+        {
+            var query = actionDescriptor.Parameters.FirstOrDefault(x => x.BindingInfo.BindingSource.Id.Equals("query", StringComparison.CurrentCultureIgnoreCase));
+            if (query == null)
+            {
+                return null;
+            }
+
+            var names = selector.Select(query.ParameterType.GetProperties()) ?? Enumerable.Empty<string>();
+            if (!names.Any())
+            {
+                return null;
+            }
+
+            return $"{{?{string.Join(',', names)}}}";
         }
 
         private bool RequiresTemplatedUrl(LinkRequest linkRequest)

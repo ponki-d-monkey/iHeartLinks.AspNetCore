@@ -55,13 +55,31 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentException($"Parameter '{nameof(request)}' must not be null or empty.");
             }
 
+            var baseUrl = GetBaseUrlOrThrow();
+            var linkRequest = linkRequestProcessor.Process(request);
+            var urlPath = GetUrlPathOrThrow(linkRequest, args);
+            var linkFactoryContext = new LinkFactoryContext()
+                .SetBaseUrl(baseUrl)
+                .SetUrlPath(urlPath);
+
+            EnrichLinkFactoryContext(linkRequest, linkFactoryContext);
+
+            return linkFactory.Create(linkFactoryContext);
+        }
+
+        private Uri GetBaseUrlOrThrow()
+        {
             var baseUrl = baseUrlProvider.Provide();
             if (baseUrl == null)
             {
                 throw new InvalidOperationException("The base URL provider must not return a null value.");
             }
 
-            var linkRequest = linkRequestProcessor.Process(request);
+            return baseUrl;
+        }
+
+        private Uri GetUrlPathOrThrow(LinkRequest linkRequest, object args)
+        {
             var urlPath = urlPathProvider.Provide(new UrlPathProviderContext(linkRequest)
             {
                 Args = args
@@ -72,17 +90,16 @@ namespace iHeartLinks.AspNetCore
                 throw new InvalidOperationException("The URL path provider must not return a null value.");
             }
 
-            var linkFactoryContext = new LinkFactoryContext()
-                .SetBaseUrl(baseUrl)
-                .SetUrlPath(urlPath);
+            return urlPath;
+        }
 
+        private void EnrichLinkFactoryContext(LinkRequest linkRequest, LinkFactoryContext linkFactoryContext)
+        {
             var linkDataWriter = new LinkDataWriter(linkFactoryContext);
             foreach (var enricher in linkDataEnrichers)
             {
                 enricher.Enrich(linkRequest, linkDataWriter);
             }
-
-            return linkFactory.Create(linkFactoryContext);
         }
     }
 }

@@ -32,12 +32,7 @@ namespace iHeartLinks.AspNetCore.LinkFactories
                 throw new ArgumentException($"Parameter '{nameof(key)}' must not be null or empty.");
             }
 
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            hashtable[key] = value;
+            hashtable[key] = value ?? throw new ArgumentNullException(nameof(value));
         }
     }
 }
