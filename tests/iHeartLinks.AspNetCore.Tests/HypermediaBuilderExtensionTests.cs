@@ -22,7 +22,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             mockService = new Mock<IHypermediaService>();
             mockService
-                .Setup(x => x.GetLink(It.Is<string>(y => y == TestRouteName), It.IsAny<object>()))
+                .Setup(x => x.GetLink(It.Is<LinkRequest>(y => y.GetRouteName() == TestRouteName)))
                 .Returns(new Link(TestHref));
 
             mockSut = new Mock<IHypermediaBuilder<IHypermediaDocument>>();
@@ -53,7 +53,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -69,7 +69,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -78,12 +78,12 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.AddRouteLink(TestRel, TestRouteName);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() == null)), Times.Once);
 
-            mockSut.Verify(x => 
+            mockSut.Verify(x =>
                 x.AddLink(
-                    It.Is<string>(y => y == TestRel), 
-                    It.Is<Link>(y => y.Href == TestHref)), 
+                    It.Is<string>(y => y == TestRel),
+                    It.Is<Link>(y => y.Href == TestHref)),
                 Times.Once);
         }
 
@@ -96,7 +96,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddRouteLinkWithConditionShouldThrowArgumentNullExceptionWhenBuildIsNull()
+        public void AddRouteLinkWithConditionShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddRouteLink(TestRel, TestRouteName, doc => true);
 
@@ -116,7 +116,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -133,7 +133,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -145,7 +145,7 @@ namespace iHeartLinks.AspNetCore.Tests
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -154,7 +154,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.AddRouteLink(TestRel, TestRouteName, doc => true);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() == null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -169,7 +169,7 @@ namespace iHeartLinks.AspNetCore.Tests
             sut.AddRouteLink(TestRel, TestRouteName, doc => false);
 
             mockSut.Verify(x => x.Document, Times.Once);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -184,7 +184,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsShouldThrowArgumentNullExceptionWhenBuilderIsNull()
+        public void AddRouteLinkWithRouteValuesShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddRouteLink(TestRel, TestRouteName, new { id = 1 });
 
@@ -195,7 +195,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddRouteLinkWithArgsShouldThrowArgumentExceptionWhenRelIs(string rel)
+        public void AddRouteLinkWithRouteValuesShouldThrowArgumentExceptionWhenRelIs(string rel)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(rel, TestRouteName, new { id = 1 });
 
@@ -203,7 +203,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -211,7 +211,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddRouteLinkWithArgsShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
+        public void AddRouteLinkWithRouteValuesShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, routeName, new { id = 1 });
 
@@ -219,27 +219,27 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsShouldThrowArgumentNullExceptionWhenArgsIsNull()
+        public void AddRouteLinkWithRouteValuesShouldThrowArgumentNullExceptionWhenRouteValuesIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, default(object));
 
-            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("args");
+            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("routeValues");
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsShouldGetAndAddLink()
+        public void AddRouteLinkWithRouteValuesShouldGetAndAddLink()
         {
             sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 });
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.IsNotNull<object>()), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() != null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -249,7 +249,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsShouldReturnSameInstanceOfHypermediaBuilder()
+        public void AddRouteLinkWithRouteValuesShouldReturnSameInstanceOfHypermediaBuilder()
         {
             var result = sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 });
 
@@ -257,7 +257,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenBuildIsNull()
+        public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddRouteLink(TestRel, TestRouteName, new { id = 1 }, doc => true);
 
@@ -268,7 +268,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddRouteLinkWithArgsAndConditionShouldThrowArgumentExceptionWhenRelIs(string rel)
+        public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentExceptionWhenRelIs(string rel)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(rel, TestRouteName, new { id = 1 }, doc => true);
 
@@ -277,7 +277,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -285,7 +285,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddRouteLinkWithArgsAndConditionShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
+        public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, routeName, new { id = 1 }, doc => true);
 
@@ -294,39 +294,39 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenArgsIsNull()
+        public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenRouteValuesIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, default, doc => true);
 
-            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("args");
+            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("routeValues");
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
+        public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
         {
-            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, default, default);
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 }, default);
 
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsAndConditionShouldGetAndAddLink()
+        public void AddRouteLinkWithRouteValuesAndConditionShouldGetAndAddLink()
         {
             sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 }, doc => true);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.IsNotNull<object>()), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() != null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -336,19 +336,19 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddRouteLinkWithArgsAndConditionShouldNotExecuteWhenConditionHandlerReturnsFalse()
+        public void AddRouteLinkWithRouteValuesAndConditionShouldNotExecuteWhenConditionHandlerReturnsFalse()
         {
             sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 }, doc => false);
 
             mockSut.Verify(x => x.Document, Times.Once);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void AddRouteLinkWithArgsAndConditionShouldReturnSameInstanceOfHypermediaBuilderWhenConditionHandlerReturns(bool conditionResult)
+        public void AddRouteLinkWithRouteValuesAndConditionShouldReturnSameInstanceOfHypermediaBuilderWhenConditionHandlerReturns(bool conditionResult)
         {
             var result = sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 }, doc => conditionResult);
 
@@ -375,7 +375,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -384,7 +384,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.AddSelfRouteLink(TestRouteName);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() == null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -402,7 +402,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsShouldThrowArgumentNullExceptionWhenBuilderIsNull()
+        public void AddSelfRouteLinkWithRouteValuesShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddSelfRouteLink(TestRouteName, new { id = 1 });
 
@@ -413,7 +413,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddSelfRouteLinkWithArgsShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
+        public void AddSelfRouteLinkWithRouteValuesShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(routeName, new { id = 1 });
 
@@ -421,27 +421,27 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsShouldThrowArgumentNullExceptionWhenArgsIsNull()
+        public void AddSelfRouteLinkWithRouteValuesShouldThrowArgumentNullExceptionWhenRouteValuesIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, default(object));
 
-            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("args");
+            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("routeValues");
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsShouldGetAndAddLink()
+        public void AddSelfRouteLinkWithRouteValuesShouldGetAndAddLink()
         {
             sut.AddSelfRouteLink(TestRouteName, new { id = 1 });
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.IsNotNull<object>()), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() != null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -451,7 +451,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsShouldReturnSameInstanceOfHypermediaBuilder()
+        public void AddSelfRouteLinkWithRouteValuesShouldReturnSameInstanceOfHypermediaBuilder()
         {
             var result = sut.AddSelfRouteLink(TestRouteName, new { id = 1 });
 
@@ -459,7 +459,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithConditionShouldThrowArgumentNullExceptionWhenBuildIsNull()
+        public void AddSelfRouteLinkWithConditionShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddSelfRouteLink(TestRouteName, doc => true);
 
@@ -479,7 +479,7 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -491,7 +491,7 @@ namespace iHeartLinks.AspNetCore.Tests
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -500,7 +500,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             sut.AddSelfRouteLink(TestRouteName, doc => true);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() == null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -515,7 +515,7 @@ namespace iHeartLinks.AspNetCore.Tests
             sut.AddSelfRouteLink(TestRouteName, doc => false);
 
             mockSut.Verify(x => x.Document, Times.Once);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
@@ -530,7 +530,7 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenBuildIsNull()
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddSelfRouteLink(TestRouteName, new { id = 1 }, doc => true);
 
@@ -541,7 +541,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldThrowArgumentExceptionWhenRouteNameIs(string routeName)
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(routeName, new { id = 1 }, doc => true);
 
@@ -550,39 +550,39 @@ namespace iHeartLinks.AspNetCore.Tests
             exception.ParamName.Should().BeNull();
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenArgsIsNull()
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenRouteValuesIsNull()
         {
             Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, default, doc => true);
 
-            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("args");
+            func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("routeValues");
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
         {
-            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, default, default);
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, new { id = 1 }, default);
 
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
             mockSut.Verify(x => x.Document, Times.Never);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldGetAndAddLink()
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldGetAndAddLink()
         {
             sut.AddSelfRouteLink(TestRouteName, new { id = 1 }, doc => true);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == TestRouteName), It.IsNotNull<object>()), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() != null)), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(
@@ -592,19 +592,19 @@ namespace iHeartLinks.AspNetCore.Tests
         }
 
         [Fact]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldNotExecuteWhenConditionHandlerReturnsFalse()
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldNotExecuteWhenConditionHandlerReturnsFalse()
         {
             sut.AddSelfRouteLink(TestRouteName, new { id = 1 }, doc => false);
 
             mockSut.Verify(x => x.Document, Times.Once);
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsNotNull<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.IsAny<LinkRequest>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == SelfRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void AddSelfRouteLinkWithArgsAndConditionShouldReturnSameInstanceOfHypermediaBuilderWhenConditionHandlerReturns(bool conditionResult)
+        public void AddSelfRouteLinkWithRouteValuesAndConditionShouldReturnSameInstanceOfHypermediaBuilderWhenConditionHandlerReturns(bool conditionResult)
         {
             var result = sut.AddSelfRouteLink(TestRouteName, new { id = 1 }, doc => conditionResult);
 

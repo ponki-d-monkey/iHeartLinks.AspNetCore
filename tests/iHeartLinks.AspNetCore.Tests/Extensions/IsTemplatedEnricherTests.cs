@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.Core;
 using Xunit;
 
 namespace iHeartLinks.AspNetCore.Tests.Extensions
 {
     public sealed class IsTemplatedEnricherTests
     {
-        private const string TemplatedKey = "templated";
+        private const string TestRouteName = "TestRouteName";
 
-        private readonly IDictionary<string, string> keyParts;
-        private readonly LinkRequest linkRequest;
-
+        private readonly LinkRequest request;
         private readonly LinkFactoryContext context;
         private readonly LinkDataWriter writer;
 
@@ -23,13 +20,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
         public IsTemplatedEnricherTests()
         {
-            keyParts = new Dictionary<string, string>
-            {
-                { LinkRequest.IdKey, "TestId" }
-            };
-
-            linkRequest = new LinkRequest(keyParts);
-
+            request = LinkRequestBuilder.CreateWithRouteName(TestRouteName);
             context = new LinkFactoryContext();
             writer = new LinkDataWriter(context);
 
@@ -37,60 +28,58 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         }
 
         [Fact]
-        public void EnrichShouldThrowArugmentNullExceptionWhenLinkRequestIsNull()
+        public void EnrichShouldThrowArugmentNullExceptionWhenRequestIsNull()
         {
             Action action = () => sut.Enrich(default, writer);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequest");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("request");
         }
 
         [Fact]
         public void EnrichShouldThrowArgumentNullExceptionWhenWriterIsNull()
         {
-            Action action = () => sut.Enrich(linkRequest, default);
+            Action action = () => sut.Enrich(request, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("writer");
         }
 
         [Fact]
-        public void EnrichShouldWriteTemplatedValueWhenLinkRequestHasTemplatedValueTrue()
+        public void EnrichShouldWriteTemplatedValueWhenRequestHasTemplatedValueTrue()
         {
-            keyParts.Add(TemplatedKey, bool.TrueString.ToLower());
+            sut.Enrich(LinkRequestBuilder.CreateWithRouteName(TestRouteName).SetIsTemplated(), writer);
 
-            sut.Enrich(linkRequest, writer);
-
-            var result = context.Get(TemplatedKey);
+            var result = context.Get(IsTemplatedEnricher.TemplatedKey);
             result.Should().Be(true);
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestDoesNotHaveTemplatedValue()
+        public void EnrichShouldNotWriteTemplatedValueWhenRequestDoesNotHaveTemplatedValue()
         {
-            sut.Enrich(linkRequest, writer);
+            sut.Enrich(request, writer);
 
-            var result = context.Get(TemplatedKey);
+            var result = context.Get(IsTemplatedEnricher.TemplatedKey);
             result.Should().BeNull();
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestHasTemplatedValueNotAValidBoolean()
+        public void EnrichShouldNotWriteTemplatedValueWhenRequestHasTemplatedValueNotAValidBoolean()
         {
-            keyParts.Add(TemplatedKey, "random string");
+            sut.Enrich(LinkRequestBuilder
+                .CreateWithRouteName(TestRouteName)
+                .Set(IsTemplatedEnricher.TemplatedKey, "yes"), writer);
 
-            sut.Enrich(linkRequest, writer);
-
-            var result = context.Get(TemplatedKey);
+            var result = context.Get(IsTemplatedEnricher.TemplatedKey);
             result.Should().BeNull();
         }
 
         [Fact]
-        public void EnrichShouldNotWriteTemplatedValueWhenLinkRequestHasTemplatedValueFalse()
+        public void EnrichShouldNotWriteTemplatedValueWhenRequestHasTemplatedValueFalse()
         {
-            keyParts.Add(TemplatedKey, bool.FalseString.ToLower());
+            sut.Enrich(LinkRequestBuilder
+                .CreateWithRouteName(TestRouteName)
+                .Set(IsTemplatedEnricher.TemplatedKey, false), writer);
 
-            sut.Enrich(linkRequest, writer);
-
-            var result = context.Get(TemplatedKey);
+            var result = context.Get(IsTemplatedEnricher.TemplatedKey);
             result.Should().BeNull();
         }
     }

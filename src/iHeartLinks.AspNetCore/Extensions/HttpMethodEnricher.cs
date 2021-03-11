@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using iHeartLinks.AspNetCore.Enrichers;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 
@@ -18,11 +19,11 @@ namespace iHeartLinks.AspNetCore.Extensions
             this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
-        public void Enrich(LinkRequest linkRequest, LinkDataWriter writer)
+        public void Enrich(LinkRequest request, LinkDataWriter writer)
         {
-            if (linkRequest == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(linkRequest));
+                throw new ArgumentNullException(nameof(request));
             }
 
             if (writer == null)
@@ -30,16 +31,21 @@ namespace iHeartLinks.AspNetCore.Extensions
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            var httpMethod = GetHttpMethod(linkRequest.Id);
+            var httpMethod = GetHttpMethod(request.GetRouteName());
             if (!string.IsNullOrWhiteSpace(httpMethod))
             {
                 writer.Write(HttpMethodKey, httpMethod);
             }
         }
 
-        protected virtual string GetHttpMethod(string id)
+        protected virtual string GetHttpMethod(IReadOnlyList<string> httpMethods)
         {
-            var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == id);
+            return httpMethods.First();
+        }
+
+        private string GetHttpMethod(string routeName)
+        {
+            var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == routeName);
             if (actionDescriptor == null)
             {
                 return null;
@@ -51,7 +57,7 @@ namespace iHeartLinks.AspNetCore.Extensions
                 return null;
             }
 
-            return httpMethodMetadata.HttpMethods.First();
+            return GetHttpMethod(httpMethodMetadata.HttpMethods);
         }
     }
 }

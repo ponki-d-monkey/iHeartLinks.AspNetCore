@@ -4,7 +4,7 @@ using FluentAssertions;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -16,11 +16,10 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 {
     public sealed class HttpMethodEnricherTests
     {
-        private const string TestId = "TestId";
+        private const string TestRouteName = "TestRouteName";
         private const string TestHttpMethod = "GET";
 
-        private readonly IDictionary<string, string> keyParts;
-        private readonly LinkRequest linkRequest;
+        private readonly LinkRequest request;
 
         private readonly LinkFactoryContext context;
         private readonly LinkDataWriter writer;
@@ -33,18 +32,12 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
         public HttpMethodEnricherTests()
         {
-            keyParts = new Dictionary<string, string>
-            {
-                { LinkRequest.IdKey, TestId }
-            };
-
-            linkRequest = new LinkRequest(keyParts);
-
+            request = LinkRequestBuilder.CreateWithRouteName(TestRouteName);
             context = new LinkFactoryContext();
             writer = new LinkDataWriter(context);
 
             endpointMetadata = new List<object> { new HttpMethodMetadata(new string[] { TestHttpMethod }) };
-            attributeRouteInfo = new AttributeRouteInfo { Name = TestId };
+            attributeRouteInfo = new AttributeRouteInfo { Name = TestRouteName };
 
             mockProvider = new Mock<IActionDescriptorCollectionProvider>();
             SetupProvider();
@@ -61,17 +54,17 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         }
 
         [Fact]
-        public void EnrichShouldThrowArugmentNullExceptionWhenLinkRequestIsNull()
+        public void EnrichShouldThrowArugmentNullExceptionWhenRequestIsNull()
         {
             Action action = () => sut.Enrich(default, writer);
 
-            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("linkRequest");
+            action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("request");
         }
 
         [Fact]
         public void EnrichShouldThrowArgumentNullExceptionWhenWriterIsNull()
         {
-            Action action = () => sut.Enrich(linkRequest, default);
+            Action action = () => sut.Enrich(request, default);
 
             action.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("writer");
         }
@@ -79,14 +72,14 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
         [Fact]
         public void EnrichShouldWriteHttpMethodValue()
         {
-            sut.Enrich(linkRequest, writer);
+            sut.Enrich(request, writer);
 
             var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().Be(TestHttpMethod);
         }
 
         [Fact]
-        public void EnrichShouldNotWriteHttpMethodWhenLinkRequestIdDoesNotExist()
+        public void EnrichShouldNotWriteHttpMethodWhenRequestRouteNameDoesNotExist()
         {
             SetupProvider(new ActionDescriptor
             {
@@ -94,7 +87,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
                 AttributeRouteInfo = attributeRouteInfo
             });
 
-            sut.Enrich(linkRequest, writer);
+            sut.Enrich(request, writer);
 
             var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().BeNull();
@@ -108,11 +101,11 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
                 EndpointMetadata = endpointMetadata,
                 AttributeRouteInfo = new AttributeRouteInfo
                 {
-                    Name = "NonExistingId"
+                    Name = "NonExistingRouteName"
                 }
             });
 
-            sut.Enrich(linkRequest, writer);
+            sut.Enrich(request, writer);
 
             var result = context.Get(HttpMethodEnricher.HttpMethodKey);
             result.Should().BeNull();

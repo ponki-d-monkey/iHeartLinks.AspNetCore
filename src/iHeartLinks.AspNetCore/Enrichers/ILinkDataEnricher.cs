@@ -1,9 +1,9 @@
-﻿using iHeartLinks.AspNetCore.LinkRequestProcessors;
+﻿using iHeartLinks.Core;
 
 namespace iHeartLinks.AspNetCore.Enrichers
 {
     public interface ILinkDataEnricher
     {
-        void Enrich(LinkRequest linkRequest, LinkDataWriter writer);
+        void Enrich(LinkRequest request, LinkDataWriter writer);
     }
 }

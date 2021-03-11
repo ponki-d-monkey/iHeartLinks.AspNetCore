@@ -30,6 +30,112 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             sut = mockSut.Object;
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void AddLinkWithConditionShouldThrowArgumentNullExceptionWhenBuilderIsNull(bool conditionHandlerResult)
+        {
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => default(IHypermediaBuilder<IHypermediaDocument>).AddLink(TestRel, TestHref, TestMethod, doc => conditionHandlerResult);
+
+            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("builder");
+        }
+
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("", true)]
+        [InlineData(" ", true)]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData(" ", false)]
+        public void AddLinkWithConditionShouldThrowArgumentExceptionWhenRelIs(string rel, bool conditionHandlerResult)
+        {
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddLink(rel, TestHref, TestMethod, doc => conditionHandlerResult);
+
+            var exception = func.Should().Throw<ArgumentException>().Which;
+            exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
+            exception.ParamName.Should().BeNull();
+
+            mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<HttpLink>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("", true)]
+        [InlineData(" ", true)]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData(" ", false)]
+        public void AddLinkWithConditionShouldThrowArgumentExceptionWhenHrefIs(string href, bool conditionHandlerResult)
+        {
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddLink(TestRel, href, TestMethod, doc => conditionHandlerResult);
+
+            var exception = func.Should().Throw<ArgumentException>().Which;
+            exception.Message.Should().Be("Parameter 'href' must not be null or empty.");
+            exception.ParamName.Should().BeNull();
+
+            mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
+        }
+
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("", true)]
+        [InlineData(" ", true)]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData(" ", false)]
+        public void AddLinkWithConditionShouldThrowArgumentExceptionWhenMethodIs(string method, bool conditionHandlerResult)
+        {
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddLink(TestRel, TestHref, method, doc => conditionHandlerResult);
+
+            var exception = func.Should().Throw<ArgumentException>().Which;
+            exception.Message.Should().Be("Parameter 'method' must not be null or empty.");
+            exception.ParamName.Should().BeNull();
+
+            mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
+        }
+
+        [Fact]
+        public void AddLinkWithConditionShouldArgumentNullExceptionWhenConditionHandlerIsNull()
+        {
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddLink(TestRel, TestHref, TestMethod, default);
+
+            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("conditionHandler");
+        }
+
+        [Fact]
+        public void AddLinkWithConditionShouldInvokeHypermediaBuilderAddLinkMethodWhenConditionHandlerReturnsTrue()
+        {
+            sut.AddLink(TestRel, TestHref, TestMethod, doc => true);
+
+            mockSut.Verify(x =>
+                x.AddLink(
+                    It.Is<string>(y => y == TestRel),
+                    It.Is<HttpLink>(y => y.Href == TestHref && y.Method == TestMethod && !y.Templated.HasValue)),
+                Times.Once);
+        }
+
+        [Fact]
+        public void AddLinkWithConditionShouldNotInvokeHypermediaBuilderAddLinkMethodWhenConditionHandlerReturnsFalse()
+        {
+            sut.AddLink(TestRel, TestHref, TestMethod, doc => false);
+
+            mockSut.Verify(x =>
+                x.AddLink(
+                    It.Is<string>(y => y == TestRel),
+                    It.Is<HttpLink>(y => y.Href == TestHref && y.Method == TestMethod && !y.Templated.HasValue)),
+                Times.Never);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void AddLinkWithConditionShouldReturnSameInstanceOfHypermediaBuilder(bool conditionHandlerResult)
+        {
+            var result = sut.AddLink(TestRel, TestHref, TestMethod, doc => conditionHandlerResult);
+
+            result.Should().BeSameAs(sut);
+        }
+
         [Fact]
         public void AddLinkShouldThrowArgumentNullExceptionWhenBuilderIsNull()
         {
@@ -50,7 +156,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -66,7 +171,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'href' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -82,7 +186,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'method' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -126,7 +229,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteValues() == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -142,17 +245,15 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteValues() == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
         public void AddRouteTemplateShouldInvokeBuilderAddLinkMethod()
         {
-            var request = $"{TestRouteName}|templated={bool.TrueString.ToLower()}";
-
             mockService
-                .Setup(x => x.GetLink(It.Is<string>(y => y == request), It.Is<object>(x => x == null)))
+                .Setup(x => x.GetLink(It.Is<LinkRequest>(y => y.GetRouteName() == TestRouteName && y.IsTemplated())))
                 .Returns(new HttpLink(TestHref, TestMethod)
                 {
                     Templated = true
@@ -160,7 +261,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             sut.AddRouteTemplate(TestRel, TestRouteName);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == request), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(y => y.GetRouteName() == TestRouteName && y.GetRouteValues() == null && y.IsTemplated())), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(

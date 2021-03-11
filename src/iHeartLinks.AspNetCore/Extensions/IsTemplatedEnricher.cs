@@ -1,6 +1,6 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.Enrichers;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.Core;
 
 namespace iHeartLinks.AspNetCore.Extensions
 {
@@ -8,11 +8,11 @@ namespace iHeartLinks.AspNetCore.Extensions
     {
         public const string TemplatedKey = "templated";
 
-        public void Enrich(LinkRequest linkRequest, LinkDataWriter writer)
+        public void Enrich(LinkRequest request, LinkDataWriter writer)
         {
-            if (linkRequest == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(linkRequest));
+                throw new ArgumentNullException(nameof(request));
             }
 
             if (writer == null)
@@ -20,19 +20,9 @@ namespace iHeartLinks.AspNetCore.Extensions
                 throw new ArgumentNullException(nameof(writer));
             }
 
-            if (!linkRequest.Parts.TryGetValue(TemplatedKey, out string templatedString))
+            if (request.IsTemplated())
             {
-                return;
-            }
-
-            if (!bool.TryParse(templatedString, out bool templated))
-            {
-                return;
-            }
-
-            if (templated)
-            {
-                writer.Write(TemplatedKey, templated);
+                writer.Write(TemplatedKey, true);
             }
         }
     }
