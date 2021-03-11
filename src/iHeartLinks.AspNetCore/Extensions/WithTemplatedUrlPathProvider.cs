@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
@@ -25,46 +25,56 @@ namespace iHeartLinks.AspNetCore.Extensions
             nonTemplatedUrlPathProvider = new NonTemplatedUrlPathProvider(urlHelperBuilder);
         }
 
-        public Uri Provide(UrlPathProviderContext context)
+        public Uri Provide(LinkRequest request)
         {
-            if (context == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(context));
+                throw new ArgumentNullException(nameof(request));
             }
 
-            var id = context.LinkRequest.Id;
-            if (string.IsNullOrWhiteSpace(id))
+            var routeName = request.GetRouteName();
+            if (string.IsNullOrWhiteSpace(routeName))
             {
-                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkRequest)}' must contain a value for '{LinkRequest.IdKey}'.");
+                throw new ArgumentException($"Parameter '{nameof(request)}' must contain a '{LinkRequestBuilder.RouteNameKey}' value.");
             }
 
-            if (RequiresTemplatedUrl(context.LinkRequest))
+            if (request.IsTemplated())
             {
-                var template = GetTemplate(id);
+                var template = GetTemplate(routeName);
                 if (string.IsNullOrWhiteSpace(template))
                 {
-                    throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL template returned a null or empty value. Value of '{LinkRequest.IdKey}': {id}");
+                    throw new InvalidOperationException($"The given '{LinkRequestBuilder.RouteNameKey}' to retrieve the URL template returned a null or empty value. Value of '{LinkRequestBuilder.RouteNameKey}': {routeName}");
                 }
 
                 return new Uri($"/{template}", UriKind.Relative);
             }
 
-            return nonTemplatedUrlPathProvider.Provide(context);
+            return nonTemplatedUrlPathProvider.Provide(request);
         }
 
-        protected virtual string GetTemplate(string id)
+        protected virtual string FormatTemplate(string template, string queryTemplate)
         {
-            var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == id);
+            return $"{template}{queryTemplate}";
+        }
+
+        protected virtual string FormatQueryTemplate(IEnumerable<string> queryNames)
+        {
+            return $"{{?{string.Join(',', queryNames)}}}";
+        }
+
+        private string GetTemplate(string routeName)
+        {
+            var actionDescriptor = provider.ActionDescriptors.Items.FirstOrDefault(x => x.AttributeRouteInfo.Name == routeName);
             if (actionDescriptor == null)
             {
-                throw new KeyNotFoundException($"The given '{LinkRequest.IdKey}' to retrieve the URL template does not exist. Value of '{LinkRequest.IdKey}': {id}");
+                throw new KeyNotFoundException($"The given '{LinkRequestBuilder.RouteNameKey}' to retrieve the URL template does not exist. Value of '{LinkRequestBuilder.RouteNameKey}': {routeName}");
             }
 
             var template = actionDescriptor.AttributeRouteInfo.Template;
             var queryTemplate = GetQueryTemplate(actionDescriptor);
             if (!string.IsNullOrWhiteSpace(queryTemplate))
             {
-                template = $"{template}{queryTemplate}";
+                template = FormatTemplate(template, queryTemplate);
             }
 
             return template;
@@ -78,18 +88,13 @@ namespace iHeartLinks.AspNetCore.Extensions
                 return null;
             }
 
-            var names = selector.Select(query.ParameterType.GetProperties()) ?? Enumerable.Empty<string>();
-            if (!names.Any())
+            var queryNames = selector.Select(query.ParameterType.GetProperties()) ?? Enumerable.Empty<string>();
+            if (!queryNames.Any())
             {
                 return null;
             }
 
-            return $"{{?{string.Join(',', names)}}}";
-        }
-
-        private bool RequiresTemplatedUrl(LinkRequest linkRequest)
-        {
-            return linkRequest.Parts.ContainsKey("templated") && linkRequest.Parts["templated"].Equals(bool.TrueString, StringComparison.CurrentCultureIgnoreCase);
+            return FormatQueryTemplate(queryNames);
         }
     }
 }

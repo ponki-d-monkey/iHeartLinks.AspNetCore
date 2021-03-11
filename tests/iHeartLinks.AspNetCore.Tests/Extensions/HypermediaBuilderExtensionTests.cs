@@ -50,7 +50,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -66,7 +65,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'href' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -82,7 +80,6 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'method' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<HttpLink>()), Times.Never);
         }
 
@@ -126,7 +123,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'rel' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.Is<object>(x => x == null)), Times.Never);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteValues() == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.IsAny<string>(), It.IsAny<Link>()), Times.Never);
         }
 
@@ -142,17 +139,15 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
             exception.Message.Should().Be("Parameter 'routeName' must not be null or empty.");
             exception.ParamName.Should().BeNull();
 
-            mockService.Verify(x => x.GetLink(It.IsAny<string>(), It.IsAny<object>()), Times.Never);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(x => x.GetRouteValues() == null)), Times.Never);
             mockSut.Verify(x => x.AddLink(It.Is<string>(y => y == TestRel), It.IsAny<Link>()), Times.Never);
         }
 
         [Fact]
         public void AddRouteTemplateShouldInvokeBuilderAddLinkMethod()
         {
-            var request = $"{TestRouteName}|templated={bool.TrueString.ToLower()}";
-
             mockService
-                .Setup(x => x.GetLink(It.Is<string>(y => y == request), It.Is<object>(x => x == null)))
+                .Setup(x => x.GetLink(It.Is<LinkRequest>(y => y.GetRouteName() == TestRouteName && y.IsTemplated())))
                 .Returns(new HttpLink(TestHref, TestMethod)
                 {
                     Templated = true
@@ -160,7 +155,7 @@ namespace iHeartLinks.AspNetCore.Tests.Extensions
 
             sut.AddRouteTemplate(TestRel, TestRouteName);
 
-            mockService.Verify(x => x.GetLink(It.Is<string>(x => x == request), It.Is<object>(x => x == null)), Times.Once);
+            mockService.Verify(x => x.GetLink(It.Is<LinkRequest>(y => y.GetRouteName() == TestRouteName && y.GetRouteValues() == null && y.IsTemplated())), Times.Once);
 
             mockSut.Verify(x =>
                 x.AddLink(

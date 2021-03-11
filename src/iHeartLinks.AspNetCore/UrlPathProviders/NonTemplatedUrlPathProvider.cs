@@ -1,10 +1,10 @@
 ﻿using System;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iHeartLinks.AspNetCore.UrlPathProviders
 {
-    public sealed class NonTemplatedUrlPathProvider : IUrlPathProvider
+    public class NonTemplatedUrlPathProvider : IUrlPathProvider
     {
         private readonly Lazy<IUrlHelper> urlHelper;
 
@@ -18,29 +18,36 @@ namespace iHeartLinks.AspNetCore.UrlPathProviders
             urlHelper = new Lazy<IUrlHelper>(() => urlHelperBuilder.Build());
         }
 
-        public Uri Provide(UrlPathProviderContext context)
+        public Uri Provide(LinkRequest request)
         {
-            if (context == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(context));
+                throw new ArgumentNullException(nameof(request));
             }
 
-            var id = context.LinkRequest.Id;
-            if (string.IsNullOrWhiteSpace(id))
+            var routeName = request.GetRouteName();
+            if (string.IsNullOrWhiteSpace(routeName))
             {
-                throw new ArgumentException($"Parameter '{nameof(context)}.{nameof(context.LinkRequest)}' must contain a value for '{LinkRequest.IdKey}'.");
+                throw new ArgumentException($"Parameter '{nameof(request)}' must contain a '{LinkRequestBuilder.RouteNameKey}' value.");
             }
 
-            var url = context.Args == null ? 
-                urlHelper.Value.RouteUrl(id) : 
-                urlHelper.Value.RouteUrl(id, context.Args);
+            var routeValues = request.GetRouteValues();
+            var url = routeValues == null ?
+                urlHelper.Value.RouteUrl(routeName) :
+                urlHelper.Value.RouteUrl(routeName, routeValues);
 
+            url = FormatUrlPath(url);
             if (string.IsNullOrWhiteSpace(url) || !Uri.IsWellFormedUriString(url, UriKind.RelativeOrAbsolute))
             {
-                throw new InvalidOperationException($"The given '{LinkRequest.IdKey}' to retrieve the URL did not provide a valid value. Value of '{LinkRequest.IdKey}': {id}");
+                throw new InvalidOperationException($"The given '{LinkRequestBuilder.RouteNameKey}' to retrieve the URL did not provide a valid value. Value of '{LinkRequestBuilder.RouteNameKey}': {routeName}");
             }
 
             return new Uri(url, UriKind.RelativeOrAbsolute);
+        }
+
+        protected virtual string FormatUrlPath(string url)
+        {
+            return url;
         }
     }
 }

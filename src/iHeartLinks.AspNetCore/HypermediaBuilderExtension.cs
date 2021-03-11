@@ -13,10 +13,10 @@ namespace iHeartLinks.AspNetCore
             return AddRouteLink(builder, SelfRel, routeName);
         }
 
-        public static IHypermediaBuilder<TDocument> AddSelfRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string routeName, object args)
+        public static IHypermediaBuilder<TDocument> AddSelfRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string routeName, object routeValues)
             where TDocument : IHypermediaDocument
         {
-            return AddRouteLink(builder, SelfRel, routeName, args);
+            return AddRouteLink(builder, SelfRel, routeName, routeValues);
         }
 
         public static IHypermediaBuilder<TDocument> AddSelfRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string routeName, Func<TDocument, bool> conditionHandler)
@@ -25,10 +25,10 @@ namespace iHeartLinks.AspNetCore
             return AddRouteLink(builder, SelfRel, routeName, conditionHandler);
         }
 
-        public static IHypermediaBuilder<TDocument> AddSelfRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string routeName, object args, Func<TDocument, bool> conditionHandler)
+        public static IHypermediaBuilder<TDocument> AddSelfRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string routeName, object routeValues, Func<TDocument, bool> conditionHandler)
             where TDocument : IHypermediaDocument
         {
-            return AddRouteLink(builder, SelfRel, routeName, args, conditionHandler);
+            return AddRouteLink(builder, SelfRel, routeName, routeValues, conditionHandler);
         }
 
         public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, Func<TDocument, bool> conditionHandler)
@@ -57,7 +57,7 @@ namespace iHeartLinks.AspNetCore
             return DoAddRouteLink(builder, rel, routeName);
         }
 
-        public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, object args, Func<TDocument, bool> conditionHandler)
+        public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, object routeValues, Func<TDocument, bool> conditionHandler)
             where TDocument : IHypermediaDocument
         {
             ValidateCommonParameters(builder, rel, routeName);
@@ -67,9 +67,9 @@ namespace iHeartLinks.AspNetCore
                 throw new ArgumentNullException(nameof(conditionHandler));
             }
 
-            if (args == null)
+            if (routeValues == null)
             {
-                throw new ArgumentNullException(nameof(args));
+                throw new ArgumentNullException(nameof(routeValues));
             }
 
             if (!conditionHandler.Invoke(builder.Document))
@@ -77,20 +77,20 @@ namespace iHeartLinks.AspNetCore
                 return builder;
             }
 
-            return DoAddRouteLink(builder, rel, routeName, args);
+            return DoAddRouteLink(builder, rel, routeName, routeValues);
         }
 
-        public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, object args)
+        public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, object routeValues)
             where TDocument : IHypermediaDocument
         {
             ValidateCommonParameters(builder, rel, routeName);
 
-            if (args == null)
+            if (routeValues == null)
             {
-                throw new ArgumentNullException(nameof(args));
+                throw new ArgumentNullException(nameof(routeValues));
             }
 
-            return DoAddRouteLink(builder, rel, routeName, args);
+            return DoAddRouteLink(builder, rel, routeName, routeValues);
         }
 
         private static void ValidateCommonParameters<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName) where TDocument : IHypermediaDocument
@@ -111,20 +111,23 @@ namespace iHeartLinks.AspNetCore
             }
         }
 
-        public static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName)
+        private static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName)
             where TDocument : IHypermediaDocument
         {
-            var link = builder.Service.GetLink(routeName, null);
+            var link = builder.Service.GetLink(LinkRequestBuilder
+                .CreateWithRouteName(routeName));
 
             builder.AddLink(rel, link);
 
             return builder;
         }
 
-        public static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName, object args)
+        private static IHypermediaBuilder<TDocument> DoAddRouteLink<TDocument>(IHypermediaBuilder<TDocument> builder, string rel, string routeName, object routeValues)
             where TDocument : IHypermediaDocument
         {
-            var link = builder.Service.GetLink(routeName, args);
+            var link = builder.Service.GetLink(LinkRequestBuilder
+                .CreateWithRouteName(routeName)
+                .SetRouteValuesIfNotNull(routeValues));
 
             builder.AddLink(rel, link);
 

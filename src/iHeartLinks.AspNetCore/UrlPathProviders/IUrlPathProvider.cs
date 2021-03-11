@@ -1,9 +1,10 @@
 ﻿using System;
+using iHeartLinks.Core;
 
 namespace iHeartLinks.AspNetCore.UrlPathProviders
 {
     public interface IUrlPathProvider
     {
-        Uri Provide(UrlPathProviderContext context);
+        Uri Provide(LinkRequest request);
     }
 }

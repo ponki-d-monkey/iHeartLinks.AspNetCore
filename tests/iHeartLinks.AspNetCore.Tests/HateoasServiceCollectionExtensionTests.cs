@@ -5,7 +5,6 @@ using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Http;
@@ -48,13 +47,6 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
                     y.ImplementationType == typeof(UrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Transient)),
-                Times.Never);
-
-            mockSut.Verify(x =>
-                x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkRequestProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -109,13 +101,6 @@ namespace iHeartLinks.AspNetCore.Tests
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
                     y.ImplementationType == typeof(UrlHelperBuilder) &&
                     y.Lifetime == ServiceLifetime.Transient)),
-                Times.Once);
-
-            mockSut.Verify(x => 
-                x.Add(It.Is<ServiceDescriptor>(y => 
-                    y.ServiceType == typeof(ILinkRequestProcessor) && 
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
-                    y.Lifetime == ServiceLifetime.Transient)), 
                 Times.Once);
 
             mockSut.Verify(x =>
@@ -182,13 +167,6 @@ namespace iHeartLinks.AspNetCore.Tests
                 Times.Never);
 
             mockSut.Verify(x =>
-                x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkRequestProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
-                    y.Lifetime == ServiceLifetime.Transient)),
-                Times.Never);
-
-            mockSut.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IHttpContextAccessor) &&
                    y.Lifetime == ServiceLifetime.Singleton)),
@@ -240,13 +218,6 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
                     y.ImplementationType == typeof(UrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Transient)),
-                Times.Never);
-
-            mockSut.Verify(x =>
-                x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkRequestProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Never);
 
@@ -304,13 +275,6 @@ namespace iHeartLinks.AspNetCore.Tests
                 Times.Once);
 
             mockSut.Verify(x =>
-                x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkRequestProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
-                    y.Lifetime == ServiceLifetime.Transient)),
-                Times.Once);
-
-            mockSut.Verify(x =>
                x.Add(It.Is<ServiceDescriptor>(y =>
                    y.ServiceType == typeof(IHttpContextAccessor) &&
                    y.Lifetime == ServiceLifetime.Singleton)),
@@ -364,13 +328,6 @@ namespace iHeartLinks.AspNetCore.Tests
                 x.Add(It.Is<ServiceDescriptor>(y =>
                     y.ServiceType == typeof(IUrlHelperBuilder) &&
                     y.ImplementationType == typeof(UrlHelperBuilder) &&
-                    y.Lifetime == ServiceLifetime.Transient)),
-                Times.Once);
-
-            mockSut.Verify(x =>
-                x.Add(It.Is<ServiceDescriptor>(y =>
-                    y.ServiceType == typeof(ILinkRequestProcessor) &&
-                    y.ImplementationType == typeof(PipeDelimitedLinkRequestProcessor) &&
                     y.Lifetime == ServiceLifetime.Transient)),
                 Times.Once);
 

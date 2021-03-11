@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
+using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Moq;
@@ -40,29 +40,28 @@ namespace iHeartLinks.AspNetCore.Tests.UrlPathProviders
         }
 
         [Fact]
-        public void ProvideShouldThrowArgumentNullExceptionWhenUrlProviderContextIsNull()
+        public void ProvideShouldThrowArgumentNullExceptionWhenRequestIsNull()
         {
             Func<Uri> func = () => sut.Provide(default);
 
-            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("context");
+            func.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("request");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
         }
 
         [Fact]
-        public void ProvideShouldThrowArgumentExceptionWhenLinkRequestDoesNotContainAnId()
+        public void ProvideShouldThrowArgumentExceptionWhenRequestDoesNotContainRouteName()
         {
-            var linkRequest = new LinkRequest(new Dictionary<string, string>
+            // Valid use of LinkRequest ctor to simulate a request w/o a routeName value.
+            var request = new LinkRequest(new Dictionary<string, object>
             {
-                { "templated", "true" }
+                { "Filler", "filler" }
             });
 
-            var context = new UrlPathProviderContext(linkRequest);
+            Func<Uri> func = () => sut.Provide(request);
 
-            Func<Uri> func = () => sut.Provide(context);
-
-            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("Parameter 'context.LinkRequest' must contain a value for 'id'.");
+            func.Should().Throw<ArgumentException>().Which.Message.Should().Be("Parameter 'request' must contain a 'routeName' value.");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
@@ -79,16 +78,9 @@ namespace iHeartLinks.AspNetCore.Tests.UrlPathProviders
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(url);
 
-            var linkRequest = new LinkRequest(new Dictionary<string, string>
-            {
-                { "id", TestRouteName }
-            });
+            Func<Uri> func = () => sut.Provide(LinkRequestBuilder.CreateWithRouteName(TestRouteName));
 
-            var context = new UrlPathProviderContext(linkRequest);
-
-            Func<Uri> func = () => sut.Provide(context);
-
-            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'id' to retrieve the URL did not provide a valid value. Value of 'id': {TestRouteName}");
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'routeName' to retrieve the URL did not provide a valid value. Value of 'routeName': {TestRouteName}");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Once);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Never);
@@ -101,13 +93,7 @@ namespace iHeartLinks.AspNetCore.Tests.UrlPathProviders
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)))
                 .Returns(TestRouteUrl);
 
-            var linkRequest = new LinkRequest(new Dictionary<string, string>
-            {
-                { "id", TestRouteName }
-            });
-
-            var context = new UrlPathProviderContext(linkRequest);
-            var result = sut.Provide(context);
+            var result = sut.Provide(LinkRequestBuilder.CreateWithRouteName(TestRouteName));
 
             result.Should().NotBeNull();
             result.ToString().Should().Be(TestRouteUrl);
@@ -121,48 +107,32 @@ namespace iHeartLinks.AspNetCore.Tests.UrlPathProviders
         [InlineData("")]
         [InlineData(" ")]
         [InlineData("invalid url format")]
-        public void ProvideWithArgsShouldThrowInvalidOperationExceptionWhenUrlHelperReturns(string url)
+        public void ProvideWithRouteValuesShouldThrowInvalidOperationExceptionWhenUrlHelperReturns(string url)
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(url);
 
-            var linkRequest = new LinkRequest(new Dictionary<string, string>
-            {
-                { "id", TestRouteName }
-            });
+            Func<Uri> func = () => sut.Provide(LinkRequestBuilder
+                .CreateWithRouteName(TestRouteName)
+                .SetRouteValuesIfNotNull(new object()));
 
-            var context = new UrlPathProviderContext(linkRequest)
-            {
-                Args = new object()
-            };
-
-            Func<Uri> func = () => sut.Provide(context);
-
-            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'id' to retrieve the URL did not provide a valid value. Value of 'id': {TestRouteName}");
+            func.Should().Throw<InvalidOperationException>().Which.Message.Should().Be($"The given 'routeName' to retrieve the URL did not provide a valid value. Value of 'routeName': {TestRouteName}");
 
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values == null)), Times.Never);
             mockUrlHelper.Verify(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)), Times.Once);
         }
 
         [Fact]
-        public void ProvideWithArgsShouldReturnUrl()
+        public void ProvideWithRouteValuesShouldReturnUrl()
         {
             mockUrlHelper
                 .Setup(x => x.RouteUrl(It.Is<UrlRouteContext>(x => x.RouteName == TestRouteName && x.Values != null)))
                 .Returns(TestRouteUrl);
 
-            var linkRequest = new LinkRequest(new Dictionary<string, string>
-            {
-                { "id", TestRouteName }
-            });
-
-            var context = new UrlPathProviderContext(linkRequest)
-            {
-                Args = new object()
-            };
-
-            var result = sut.Provide(context);
+            var result = sut.Provide(LinkRequestBuilder
+                .CreateWithRouteName(TestRouteName)
+                .SetRouteValuesIfNotNull(new object()));
 
             result.Should().NotBeNull();
             result.ToString().Should().Be(TestRouteUrl);

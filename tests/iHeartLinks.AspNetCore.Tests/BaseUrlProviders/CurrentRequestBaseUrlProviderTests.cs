@@ -12,7 +12,7 @@ namespace iHeartLinks.AspNetCore.Tests.BaseUrlProviders
         private const string TestScheme = "https";
         private const string TestHost = "iheartlinks.example.com";
 
-        private readonly Mock<HttpRequest>  mockHttpRequest;
+        private readonly Mock<HttpRequest> mockHttpRequest;
         private readonly Mock<IHttpContextAccessor> mockHttpContextAccessor;
 
         private readonly CurrentRequestBaseUrlProvider sut;

@@ -1,7 +1,6 @@
 ﻿using System;
 using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -22,7 +21,6 @@ namespace iHeartLinks.AspNetCore
             services.AddHttpContextAccessor();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.TryAddTransient<IUrlHelperBuilder, UrlHelperBuilder>();
-            services.TryAddTransient<ILinkRequestProcessor, PipeDelimitedLinkRequestProcessor>();
             services.TryAddTransient<IBaseUrlProvider, CurrentRequestBaseUrlProvider>();
             services.TryAddTransient<IUrlPathProvider, NonTemplatedUrlPathProvider>();
             services.TryAddTransient<ILinkFactory, LinkFactory>();

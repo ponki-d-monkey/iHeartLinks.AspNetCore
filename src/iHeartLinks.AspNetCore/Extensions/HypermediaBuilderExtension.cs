@@ -53,7 +53,9 @@ namespace iHeartLinks.AspNetCore.Extensions
                 throw new ArgumentException($"Parameter '{nameof(routeName)}' must not be null or empty.");
             }
 
-            var link = builder.Service.GetLink($"{routeName}|templated={bool.TrueString.ToLower()}", null);
+            var link = builder.Service.GetLink(LinkRequestBuilder
+                .CreateWithRouteName(routeName)
+                .SetIsTemplated());
 
             builder.AddLink(rel, link);
 

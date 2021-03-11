@@ -6,7 +6,6 @@ using iHeartLinks.AspNetCore.BaseUrlProviders;
 using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.Extensions;
 using iHeartLinks.AspNetCore.LinkFactories;
-using iHeartLinks.AspNetCore.LinkRequestProcessors;
 using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
 using Microsoft.AspNetCore.Http;
@@ -610,7 +609,7 @@ namespace iHeartLinks.AspNetCore.Tests
         {
             public string Name { get; set; }
 
-            public Uri Provide(UrlPathProviderContext context)
+            public Uri Provide(LinkRequest request)
             {
                 throw new NotImplementedException();
             }
