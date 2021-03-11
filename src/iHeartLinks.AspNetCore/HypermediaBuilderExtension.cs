@@ -36,17 +36,7 @@ namespace iHeartLinks.AspNetCore
         {
             ValidateCommonParameters(builder, rel, routeName);
 
-            if (conditionHandler == null)
-            {
-                throw new ArgumentNullException(nameof(conditionHandler));
-            }
-
-            if (!conditionHandler.Invoke(builder.Document))
-            {
-                return builder;
-            }
-
-            return DoAddRouteLink(builder, rel, routeName);
+            return builder.AddLinksPerCondition(conditionHandler, b => DoAddRouteLink(b, rel, routeName));
         }
 
         public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName)
@@ -62,22 +52,12 @@ namespace iHeartLinks.AspNetCore
         {
             ValidateCommonParameters(builder, rel, routeName);
 
-            if (conditionHandler == null)
-            {
-                throw new ArgumentNullException(nameof(conditionHandler));
-            }
-
             if (routeValues == null)
             {
                 throw new ArgumentNullException(nameof(routeValues));
             }
 
-            if (!conditionHandler.Invoke(builder.Document))
-            {
-                return builder;
-            }
-
-            return DoAddRouteLink(builder, rel, routeName, routeValues);
+            return builder.AddLinksPerCondition(conditionHandler, b => DoAddRouteLink(b, rel, routeName, routeValues));
         }
 
         public static IHypermediaBuilder<TDocument> AddRouteLink<TDocument>(this IHypermediaBuilder<TDocument> builder, string rel, string routeName, object routeValues)

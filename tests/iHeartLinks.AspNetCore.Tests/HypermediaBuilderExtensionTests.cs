@@ -312,7 +312,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [Fact]
         public void AddRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
         {
-            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, default, default);
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddRouteLink(TestRel, TestRouteName, new { id = 1 }, default);
 
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
@@ -568,7 +568,7 @@ namespace iHeartLinks.AspNetCore.Tests
         [Fact]
         public void AddSelfRouteLinkWithRouteValuesAndConditionShouldThrowArgumentNullExceptionWhenConditionHandlerIsNull()
         {
-            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, default, default);
+            Func<IHypermediaBuilder<IHypermediaDocument>> func = () => sut.AddSelfRouteLink(TestRouteName, new { id = 1 }, default);
 
             func.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("conditionHandler");
 
