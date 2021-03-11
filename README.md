@@ -115,7 +115,7 @@ hypermediaService
   .Document;
 ```
 
-The link with _"update"_ `rel` will only be added to the model if `IsActive` is `true`.
+The link with _update_ `rel` will only be added to the model if `IsActive` is `true`.
 
 Multiple links can also be added based on a single condition.
 
@@ -138,7 +138,7 @@ To add an external link, use the `AddLink()` method.
 ```csharp
 hypermediaService
   .AddSelf(model)
-  .AddLink("profile", "https://social-media.example.com/api/profile/5B94C11F-FB12-415D-9F75-8E1832F0D6F8"))
+  .AddLink("profile", "https://social-media.example.com/api/profile/1"))
   .Document;
 ```
 
@@ -207,7 +207,7 @@ public class Startup
 }
 ```
 
-For backward compatibility, a relative URL _href_ is also supported.
+A relative URL _href_ is also supported.
 
 ```csharp
 using iHeartLinks.AspNetCore;
@@ -223,7 +223,7 @@ public class Startup
 
 ## Extensions
 
-Features that can be turned on/off have been moved to the `iHeartLinks.AspNetCore.Extensions` namespace. See the _Configuration_ section above to understand how to enable these features.
+Some features can be found in the `iHeartLinks.AspNetCore.Extensions` namespace. See the _Configuration_ section above to understand how to enable these features.
 
 ### Templated
 
@@ -285,7 +285,7 @@ The code above will produce an API response in JSON format like the example belo
 }
 ```
 
-Take note, calling the `AddRouteTemplate()` method without enabling templated links will result in an exception.
+Take note, calling the `AddRouteTemplate()` method without enabling _templated links_ may result in an exception.
 
 ### External
 
@@ -294,7 +294,16 @@ To add an external link with an _HTTP method_, use the `AddLink()` method in the
 ```csharp
 hypermediaService
   .AddSelf(model)
-  .AddLink("profile", "https://social-media.example.com/api/profile/5B94C11F-FB12-415D-9F75-8E1832F0D6F8", "GET"))
+  .AddLink("profile", "https://social-media.example.com/api/profile/1", "GET"))
+  .Document;
+```
+
+A condition can also be passed to `AddLink()`.
+
+```csharp
+hypermediaService
+  .AddSelf(model)
+  .AddLink("profile", "https://social-media.example.com/api/profile/1", "GET", m => m.UserType == "SocialMedia"))
   .Document;
 ```
 

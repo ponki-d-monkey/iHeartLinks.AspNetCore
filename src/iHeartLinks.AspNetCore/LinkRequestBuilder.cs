@@ -31,7 +31,7 @@ namespace iHeartLinks.AspNetCore
 
         public LinkRequestBuilder SetRouteValuesIfNotNull(object routeValues)
         {
-            return SetIfNotNull(RouteValuesKey, routeValues);
+            return DoSetIfNotNull(RouteValuesKey, routeValues);
         }
 
         public LinkRequestBuilder SetIfNotNull(string key, object value)
