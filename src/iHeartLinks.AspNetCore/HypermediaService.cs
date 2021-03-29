@@ -6,7 +6,9 @@ using iHeartLinks.AspNetCore.Enrichers;
 using iHeartLinks.AspNetCore.LinkFactories;
 using iHeartLinks.AspNetCore.UrlPathProviders;
 using iHeartLinks.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace iHeartLinks.AspNetCore
 {
@@ -42,7 +44,7 @@ namespace iHeartLinks.AspNetCore
         {
             return DoGetLink(LinkRequestBuilder
                 .CreateWithRouteName(urlHelper.Value.ActionContext.ActionDescriptor.AttributeRouteInfo.Name)
-                .SetRouteValuesIfNotNull(urlHelper.Value.ActionContext.HttpContext.Request.Query?.ToDictionary(x => x.Key, x => x.Value.ToString())));
+                .SetRouteValuesIfNotNull(ConvertToRouteValues(urlHelper.Value.ActionContext.HttpContext.Request.Query)));
         }
 
         public Link GetLink(LinkRequest request)
@@ -63,6 +65,16 @@ namespace iHeartLinks.AspNetCore
             }
 
             return DoGetLink(request);
+        }
+
+        private RouteValueDictionary ConvertToRouteValues(IQueryCollection query)
+        {
+            if (query == null)
+            {
+                return null;
+            }
+
+            return RouteValueDictionary.FromArray(query.ToDictionary(x => x.Key, x => x.Value as object).ToArray());
         }
 
         private Link DoGetLink(LinkRequest request)
