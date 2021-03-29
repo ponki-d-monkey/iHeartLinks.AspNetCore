@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Primitives;
 using Moq;
 using Xunit;
@@ -179,7 +180,7 @@ namespace iHeartLinks.AspNetCore.Tests
             mockUrlPathProvider.Verify(x => x.Provide(It.Is<LinkRequest>(x =>
                 x.GetRouteName() == TestRouteName &&
                 x.GetRouteValues() != null &&
-                x.GetRouteValues() is Dictionary<string, string>)),
+                x.GetRouteValues() is RouteValueDictionary)),
             Times.Once);
         }
 
@@ -204,17 +205,17 @@ namespace iHeartLinks.AspNetCore.Tests
 
             SetupUrlHelperBuilder(mockHttpContext.Object);
 
-            var expectedQuery = default(Dictionary<string, string>);
+            var expectedQuery = default(RouteValueDictionary);
             mockUrlPathProvider
-                .Setup(x => x.Provide(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() is Dictionary<string, string>)))
+                .Setup(x => x.Provide(It.Is<LinkRequest>(x => x.GetRouteName() == TestRouteName && x.GetRouteValues() is RouteValueDictionary)))
                 .Returns(new Uri(TestRouteUrl, UriKind.RelativeOrAbsolute))
-                .Callback<LinkRequest>(x => expectedQuery = x.GetRouteValues() as Dictionary<string, string>);
+                .Callback<LinkRequest>(x => expectedQuery = x.GetRouteValues() as RouteValueDictionary);
 
             sut.GetLink();
 
             expectedQuery.Should().NotBeNull();
-            expectedQuery.Should().Contain("q1", "v1");
-            expectedQuery.Should().Contain("q2", "v2.1,v2.2");
+            expectedQuery.Should().Contain("q1", new StringValues("v1"));
+            expectedQuery.Should().Contain("q2", new StringValues(new[] { "v2.1", "v2.2" }));
         }
 
         [Fact]
