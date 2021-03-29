@@ -86,7 +86,7 @@ public class PersonController
 }
 ```
 
-The code above will produce an API response in JSON format like the example below.
+The code above will produce an API response in JSON format like the example below when the _GetPerson_ route is invoked.
 
 ```json
 {
@@ -103,6 +103,18 @@ The code above will produce an API response in JSON format like the example belo
 ```
 
 ## Adding links
+
+### Self
+
+A _self_ link can be added by calling the `AddSelf()` method. This feature is part of [iHeartLinks.Core](https://github.com/ponki-d-monkey/iHeartLinks.Core).
+
+```csharp
+hypermediaService
+  .AddSelf(model)
+  .Document;
+```
+
+Take note, querystrings will be included in the _self_ link _href_ automatically if querystrings have been passed in the original request.
 
 ### Conditional
 
@@ -227,7 +239,7 @@ Some features can be found in the `iHeartLinks.AspNetCore.Extensions` namespace.
 
 ### Templated
 
-Templated links can be added to a model by calling the method `AddRouteTemplate()` method.
+Templated links can be added to a model by calling the `AddRouteTemplate()` method.
 
 ```csharp
 using iHeartLinks.AspNetCore;
@@ -266,7 +278,7 @@ public class PersonController
 }
 ```
 
-The code above will produce an API response in JSON format like the example below.
+The code above will produce an API response in JSON format like the example below when the _GetPeople_ route is invoked.
 
 ```json
 {
@@ -287,6 +299,77 @@ The code above will produce an API response in JSON format like the example belo
 
 Take note, calling the `AddRouteTemplate()` method without enabling _templated links_ may result in an exception.
 
+A querystring template will be included automatically if the controller action accepts a parameter as a query parameter.
+
+```csharp
+using iHeartLinks.AspNetCore;
+using iHeartLinks.AspNetCore.Extensions;
+using iHeartLinks.Core;
+
+[Route("api/[controller]")]
+[ApiController]
+public class PersonController
+{
+  private readonly IHypermediaService hypermediaService;
+
+  public PersonController(IHypermediaService hypermediaService)
+  {
+    this.hypermediaService = hypermediaService;
+  }
+
+  [HttpGet]
+  [Route("", Name = "GetPeople")]
+  public IActionResult Get([FromQuery] Filter filter)
+  {
+    throw new NotImplementedException();
+  }
+
+  [HttpGet]
+  [Route("{id}", Name = "GetPerson")]
+  public IActionResult Get(long id)
+  {
+    var model = new Person
+    {
+      Name = "Juan Dela Cruz"
+    };
+
+    return Ok(hypermediaService
+      .AddSelf(model)
+      .AddRouteTemplate("filter", "GetPeople")
+      .Document);
+  }
+}
+```
+
+`Filter` is an object with the following properties.
+
+```csharp
+public class Filter
+{
+  public string Search { get; set; }
+  public int PageNumber { get; set; }
+  public int PageSize { get; set; }
+}
+```
+
+The code above will produce an API response in JSON format like the example below when the _GetPerson_ route is invoked.
+
+````json
+{
+  "name": "Juan Dela Cruz",
+  "_links": {
+    "self": {
+      "href": "https://your.api.com/person/1",
+      "method": "GET"
+    },
+    "filter": {
+      "href": "https://your.api.com/person{?Search,PageNumber,PageSize}",
+      "method": "GET",
+      "templated": true
+    }
+  }
+}
+
 ### External
 
 To add an external link with an _HTTP method_, use the `AddLink()` method in the `iHeartLinks.AspNetCore.Extensions` namespace.
@@ -296,7 +379,7 @@ hypermediaService
   .AddSelf(model)
   .AddLink("profile", "https://social-media.example.com/api/profile/1", "GET"))
   .Document;
-```
+````
 
 A condition can also be passed to `AddLink()`.
 
