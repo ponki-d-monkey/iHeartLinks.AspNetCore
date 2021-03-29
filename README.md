@@ -354,7 +354,7 @@ public class Filter
 
 The code above will produce an API response in JSON format like the example below when the _GetPerson_ route is invoked.
 
-````json
+```json
 {
   "name": "Juan Dela Cruz",
   "_links": {
@@ -369,6 +369,7 @@ The code above will produce an API response in JSON format like the example belo
     }
   }
 }
+```
 
 ### External
 
@@ -379,7 +380,7 @@ hypermediaService
   .AddSelf(model)
   .AddLink("profile", "https://social-media.example.com/api/profile/1", "GET"))
   .Document;
-````
+```
 
 A condition can also be passed to `AddLink()`.
 
